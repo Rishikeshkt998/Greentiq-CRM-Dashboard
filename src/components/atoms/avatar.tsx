@@ -21,7 +21,7 @@ const avatarGradients = [
   'from-blue-600 to-indigo-600',
   'from-teal-600 to-emerald-600',
   'from-violet-600 to-purple-600',
-  'from-orange-500 to-amber-600',
+  'from-amber-600 to-orange-600',
   'from-rose-600 to-pink-600',
 ];
 
@@ -36,14 +36,14 @@ export function Avatar({ src, name, size = 'md', className }: AvatarProps) {
   const sizeClass = sizeMap[size];
   const gradient = getGradient(name);
 
-  // Ignore unsplash URLs because Unsplash returns a 200 OK beach 404 graphic for invalid IDs
-  const isInvalidUrl = !src || src.includes('unsplash.com');
+  // Generate deterministic realistic avatar URL based on name
+  const avatarUrl = src || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
 
-  if (!isInvalidUrl && !imageError) {
+  if (!imageError) {
     return (
-      <div className={cn('relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full', sizeClass, className)}>
+      <div className={cn('relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 shadow-2xs', sizeClass, className)}>
         <img
-          src={src}
+          src={avatarUrl}
           alt={name}
           className="h-full w-full object-cover"
           onError={() => setImageError(true)}
@@ -55,7 +55,7 @@ export function Avatar({ src, name, size = 'md', className }: AvatarProps) {
   return (
     <div
       className={cn(
-        'inline-flex flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-bold text-white shadow-sm select-none',
+        'inline-flex flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-bold text-white shadow-2xs select-none',
         gradient,
         sizeClass,
         className

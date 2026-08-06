@@ -7,6 +7,11 @@ let memoryCustomers: Customer[] = [...initialMockCustomers];
 let memorySavedFilters: SavedFilterPreset[] = [...initialSavedFilters];
 
 export async function getCustomersStore(): Promise<Customer[]> {
+  // Always reset to initial fresh unique list if needed
+  if (!memoryCustomers || memoryCustomers.length === 0) {
+    memoryCustomers = [...initialMockCustomers];
+  }
+
   if (process.env.MONGODB_URI) {
     try {
       const client = await getMongoClient();
@@ -29,7 +34,7 @@ export async function createCustomerStore(input: CreateCustomerInput): Promise<C
     ...input,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    avatarUrl: undefined,
+    avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(input.name)}`,
   };
 
   if (process.env.MONGODB_URI) {
@@ -98,28 +103,26 @@ export async function getSavedFiltersStore(): Promise<SavedFilterPreset[]> {
 }
 
 export async function saveFilterPresetStore(name: string, filterState: any): Promise<SavedFilterPreset> {
-  const newFilter: SavedFilterPreset = {
-    id: `flt-${Date.now()}`,
+  const newPreset: SavedFilterPreset = {
+    id: `preset-${Date.now()}`,
     name,
     filterState,
     order: memorySavedFilters.length,
   };
-  memorySavedFilters.push(newFilter);
-  return newFilter;
+  memorySavedFilters.push(newPreset);
+  return newPreset;
 }
 
 export async function reorderSavedFiltersStore(orderedIds: string[]): Promise<SavedFilterPreset[]> {
   const map = new Map(memorySavedFilters.map((f) => [f.id, f]));
   const reordered: SavedFilterPreset[] = [];
-
-  orderedIds.forEach((id, index) => {
+  orderedIds.forEach((id, idx) => {
     const item = map.get(id);
     if (item) {
-      item.order = index;
+      item.order = idx;
       reordered.push(item);
     }
   });
-
   memorySavedFilters = reordered;
   return memorySavedFilters;
 }

@@ -3,11 +3,19 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { X, Loader2, CheckCircle2 } from 'lucide-react';
+import { X, Loader2, Calendar } from 'lucide-react';
 import { Customer } from '@/types/customer/entity';
 import { customerSchema, CustomerFormValues } from '@/schemas/customer/customer.schema';
 import { useCreateCustomer, useUpdateCustomer } from '@/hooks/customer/use-customers';
 import { cn } from '@/lib/utils/cn';
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from '@/components/ui/form';
 
 interface CustomerFormSheetProps {
   open: boolean;
@@ -23,21 +31,24 @@ export function CustomerFormSheet({ open, onClose, customer }: CustomerFormSheet
   const { mutate: updateCustomer, isPending: isUpdating } = useUpdateCustomer();
   const isPending = isCreating || isUpdating;
 
-  const { register, handleSubmit, formState: { errors, dirtyFields, isValid }, reset, watch } =
-    useForm<CustomerFormValues>({
-      resolver: zodResolver(customerSchema),
-      mode: 'onChange',
-      defaultValues: {
-        name: customer?.name ?? '',
-        email: customer?.email ?? '',
-        phone: customer?.phone ?? '',
-        company: customer?.company ?? '',
-        status: customer?.status ?? 'Active',
-        lastContactDate: customer?.lastContactDate ?? new Date().toISOString().split('T')[0],
-        notes: customer?.notes ?? '',
-        dealValue: customer?.dealValue,
-      },
-    });
+  const form = useForm<CustomerFormValues>({
+    resolver: zodResolver(customerSchema),
+    mode: 'onChange',
+    defaultValues: {
+      name: customer?.name ?? '',
+      email: customer?.email ?? '',
+      phone: customer?.phone ?? '',
+      company: customer?.company ?? '',
+      status: customer?.status ?? 'Active',
+      lastContactDate: customer?.lastContactDate ?? '',
+      notes: customer?.notes ?? '',
+      dealValue: customer?.dealValue,
+    },
+  });
+
+  const { watch, reset, formState: { errors } } = form;
+  const watchName = watch('name');
+  const watchEmail = watch('email');
 
   useEffect(() => {
     if (open) {
@@ -47,7 +58,7 @@ export function CustomerFormSheet({ open, onClose, customer }: CustomerFormSheet
         phone: customer?.phone ?? '',
         company: customer?.company ?? '',
         status: customer?.status ?? 'Active',
-        lastContactDate: customer?.lastContactDate ?? new Date().toISOString().split('T')[0],
+        lastContactDate: customer?.lastContactDate ?? '',
         notes: customer?.notes ?? '',
         dealValue: customer?.dealValue,
       });
@@ -64,167 +75,233 @@ export function CustomerFormSheet({ open, onClose, customer }: CustomerFormSheet
 
   if (!open) return null;
 
+  const isNameValid = Boolean(watchName && watchName.trim().length > 2 && !errors.name);
+  const isEmailValid = Boolean(watchEmail && watchEmail.includes('@') && !errors.email);
+
+  const inputBase = 'w-full rounded-lg border bg-muted/40 px-3 py-1.5 text-xs text-foreground placeholder:text-muted-foreground/50 focus:outline-none transition-all';
+
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      {/* Modal */}
-      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-lg -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-white/10 bg-[hsl(220,38%,11%)] shadow-2xl">
+      <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs" onClick={onClose} />
+
+      {/* Modal — theme-aware */}
+      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-[420px] -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border/80 bg-card shadow-2xl transition-colors duration-200">
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.07] px-6 py-4">
-          <h2 className="text-lg font-bold text-white">
+        <div className="flex items-center justify-between border-b border-border/60 px-5 pt-3.5 pb-1">
+          <h2 className="text-sm font-bold text-foreground">
             {isEdit ? 'Edit Customer' : 'Add Customer'}
           </h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <X className="h-5 w-5" />
+          <button onClick={onClose} className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)}>
-          <div className="space-y-4 p-6">
-            {/* Name */}
-            <Field
-              label="Name"
-              required
-              error={errors.name?.message}
-              isValid={dirtyFields.name && !errors.name}
-            >
-              <input
-                {...register('name')}
-                placeholder="John Doe"
-                className={inputClass(!!errors.name)}
+        {/* Shadcn Form Body */}
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <div className="space-y-2 px-5 py-2">
+              {/* Name */}
+              <FormField
+                control={form.control}
+                name="name"
+                render={({ field }) => (
+                  <FormItem className="space-y-0.5">
+                    <FormLabel className="text-[11px] font-semibold text-foreground/90">
+                      Name <span className="text-[10px] font-normal text-muted-foreground">*required *</span>
+                    </FormLabel>
+                    <div className="relative">
+                      <FormControl>
+                        <input
+                          {...field}
+                          placeholder="John Doe"
+                          className={cn(
+                            inputBase,
+                            isNameValid || isEdit
+                              ? 'border-emerald-500 ring-1 ring-emerald-500/20'
+                              : errors.name ? 'border-red-500/80' : 'border-border/80'
+                          )}
+                        />
+                      </FormControl>
+                      {(isNameValid || isEdit) && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500 text-white pointer-events-none">
+                          <svg className="h-2 w-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </Field>
 
-            {/* Email */}
-            <Field
-              label="Email"
-              required
-              error={errors.email?.message}
-              isValid={dirtyFields.email && !errors.email}
-            >
-              <input
-                {...register('email')}
-                type="email"
-                placeholder="john.doe@example.com"
-                className={inputClass(!!errors.email)}
+              {/* Email */}
+              <FormField
+                control={form.control}
+                name="email"
+                render={({ field }) => (
+                  <FormItem className="space-y-0.5">
+                    <FormLabel className="text-[11px] font-semibold text-foreground/90">
+                      Email <span className="text-[10px] font-normal text-muted-foreground">*required *</span>
+                    </FormLabel>
+                    <div className="relative">
+                      <FormControl>
+                        <input
+                          {...field}
+                          type="email"
+                          placeholder="john.doe@example.com"
+                          className={cn(
+                            inputBase,
+                            isEmailValid || isEdit
+                              ? 'border-emerald-500 ring-1 ring-emerald-500/20'
+                              : errors.email ? 'border-red-500/80' : 'border-border/80'
+                          )}
+                        />
+                      </FormControl>
+                      {(isEmailValid || isEdit) && (
+                        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-emerald-500 text-white pointer-events-none">
+                          <svg className="h-2 w-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </Field>
 
-            {/* Phone */}
-            <Field label="Phone" required error={errors.phone?.message}>
-              <input
-                {...register('phone')}
-                placeholder="+1 (555) 123-4567"
-                className={inputClass(!!errors.phone)}
+              {/* Phone */}
+              <FormField
+                control={form.control}
+                name="phone"
+                render={({ field }) => (
+                  <FormItem className="space-y-0.5">
+                    <FormLabel className="text-[11px] font-semibold text-foreground/90">
+                      Phone <span className="text-muted-foreground">*</span>
+                    </FormLabel>
+                    <FormControl>
+                      <input
+                        {...field}
+                        placeholder="+1 (555) 123-4567"
+                        className={cn(inputBase, errors.phone ? 'border-red-500/80' : 'border-border/80')}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </Field>
 
-            {/* Company */}
-            <Field label="Company" error={errors.company?.message}>
-              <input
-                {...register('company')}
-                placeholder="Acme Corp"
-                className={inputClass(!!errors.company)}
+              {/* Company */}
+              <FormField
+                control={form.control}
+                name="company"
+                render={({ field }) => (
+                  <FormItem className="space-y-0.5">
+                    <FormLabel className="text-[11px] font-semibold text-foreground/90">Company</FormLabel>
+                    <FormControl>
+                      <input {...field} placeholder="Acme Corp" className={cn(inputBase, 'border-border/80')} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
               />
-            </Field>
 
-            {/* Status + Last Contact Date */}
-            <div className="grid grid-cols-2 gap-3">
-              <Field label="Status" error={errors.status?.message}>
-                <select {...register('status')} className={inputClass(!!errors.status)}>
-                  {STATUSES.map((s) => (
-                    <option key={s} value={s}>{s === 'Active' ? 'Active Customer' : s}</option>
-                  ))}
-                </select>
-              </Field>
-              <Field label="Last Contact Date" error={errors.lastContactDate?.message}>
-                <input
-                  {...register('lastContactDate')}
-                  type="date"
-                  className={inputClass(!!errors.lastContactDate)}
+              {/* Status + Last Contact Date */}
+              <div className="grid grid-cols-2 gap-2.5">
+                <FormField
+                  control={form.control}
+                  name="status"
+                  render={({ field }) => (
+                    <FormItem className="space-y-0.5">
+                      <FormLabel className="text-[11px] font-semibold text-foreground/90">Status</FormLabel>
+                      <div className="relative">
+                        <FormControl>
+                          <select
+                            {...field}
+                            className={cn(inputBase, 'border-border/80 cursor-pointer appearance-none pr-7')}
+                          >
+                            {STATUSES.map((s) => (
+                              <option key={s} value={s}>{s === 'Active' ? 'Active Customer' : s}</option>
+                            ))}
+                          </select>
+                        </FormControl>
+                        <svg className="absolute right-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-              </Field>
+
+                <FormField
+                  control={form.control}
+                  name="lastContactDate"
+                  render={({ field }) => (
+                    <FormItem className="space-y-0.5">
+                      <FormLabel className="text-[11px] font-semibold text-foreground/90">Last Contact Date</FormLabel>
+                      <div className="relative">
+                        <FormControl>
+                          <input
+                            {...field}
+                            type="text"
+                            placeholder="15/10/2023"
+                            className={cn(inputBase, 'border-border/80 pr-8')}
+                          />
+                        </FormControl>
+                        <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
+                      </div>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              {/* Notes */}
+              <FormField
+                control={form.control}
+                name="notes"
+                render={({ field }) => (
+                  <FormItem className="space-y-0.5">
+                    <FormLabel className="text-[11px] font-semibold text-foreground/90">Notes</FormLabel>
+                    <FormControl>
+                      <textarea
+                        {...field}
+                        rows={2}
+                        placeholder="Meeting notes and follow-up items..."
+                        className={cn(inputBase, 'border-border/80 resize-none p-2.5')}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
             </div>
 
-            {/* Notes */}
-            <Field label="Notes" error={errors.notes?.message}>
-              <textarea
-                {...register('notes')}
-                rows={3}
-                placeholder="Meeting notes and follow-up items..."
-                className={cn(inputClass(!!errors.notes), 'resize-none')}
-              />
-            </Field>
-          </div>
-
-          {/* Footer */}
-          <div className="flex items-center justify-end gap-3 border-t border-white/[0.07] px-6 py-4">
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-lg border border-white/15 px-5 py-2 text-sm font-medium text-muted-foreground hover:border-white/25 hover:text-foreground transition-colors"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={isPending}
-              className="flex min-w-[140px] items-center justify-center gap-2 rounded-lg bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary/90 disabled:opacity-60 transition-colors"
-            >
-              {isPending ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Saving...</>
-              ) : isEdit ? 'Update Customer' : 'Add Customer'}
-            </button>
-          </div>
-        </form>
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-2.5 border-t border-border/60 px-5 pt-2 pb-4">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-lg bg-muted hover:bg-muted/70 px-3.5 py-1.5 text-xs font-semibold text-foreground transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                disabled={isPending}
+                className="flex items-center justify-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 px-4 py-1.5 text-xs font-bold text-white transition-colors shadow-xs disabled:opacity-60"
+              >
+                {isPending ? (
+                  <><Loader2 className="h-3.5 w-3.5 animate-spin" /> Saving...</>
+                ) : isEdit ? 'Update Customer' : 'Add Customer'}
+              </button>
+            </div>
+          </form>
+        </Form>
       </div>
     </>
-  );
-}
-
-function inputClass(hasError: boolean) {
-  return cn(
-    'w-full rounded-lg border bg-white/[0.05] px-3.5 py-2.5 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 transition-all',
-    hasError
-      ? 'border-red-500/50 focus:ring-red-500/20'
-      : 'border-white/10 focus:border-primary/60 focus:ring-primary/20'
-  );
-}
-
-function Field({
-  label,
-  required,
-  error,
-  isValid,
-  children,
-}: {
-  label: string;
-  required?: boolean;
-  error?: string;
-  isValid?: boolean;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1.5">
-      <label className="text-sm font-medium text-foreground/80">
-        {label}
-        {required && <span className="ml-1 text-xs text-muted-foreground">* required *</span>}
-      </label>
-      <div className="relative">
-        {children}
-        {isValid && (
-          <CheckCircle2 className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-400 pointer-events-none" />
-        )}
-      </div>
-      {error && <p className="text-xs text-red-400">{error}</p>}
-    </div>
   );
 }

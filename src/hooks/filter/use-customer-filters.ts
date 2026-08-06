@@ -15,7 +15,7 @@ const DEFAULT_FILTERS: CustomerFilterState = {
   sortBy: 'name',
   sortOrder: 'asc',
   page: 1,
-  pageSize: 10,
+  pageSize: 8,
 };
 
 export function useCustomerFilters() {
@@ -27,7 +27,7 @@ export function useCustomerFilters() {
     const search = searchParams.get('search') || '';
     const status = searchParams.getAll('status') as CustomerStatus[];
     const page = Number(searchParams.get('page')) || 1;
-    const pageSize = Number(searchParams.get('pageSize')) || 10;
+    const pageSize = Number(searchParams.get('pageSize')) || 8;
     const sortBy = searchParams.get('sortBy') || 'name';
     const sortOrder = (searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc';
 
@@ -48,7 +48,7 @@ export function useCustomerFilters() {
       const params = new URLSearchParams();
       if (newFilters.search) params.set('search', newFilters.search);
       if (newFilters.page > 1) params.set('page', String(newFilters.page));
-      if (newFilters.pageSize !== 10) params.set('pageSize', String(newFilters.pageSize));
+      if (newFilters.pageSize !== 8) params.set('pageSize', String(newFilters.pageSize));
       if (newFilters.sortBy !== 'name') params.set('sortBy', newFilters.sortBy);
       if (newFilters.sortOrder !== 'asc') params.set('sortOrder', newFilters.sortOrder);
       newFilters.statuses.forEach((s) => params.append('status', s));
@@ -61,7 +61,7 @@ export function useCustomerFilters() {
   const updateFilters = useCallback(
     (updates: Partial<CustomerFilterState>) => {
       setFilters((prev) => {
-        const next = { ...prev, ...updates, page: updates.page ?? 1 };
+        const next = { ...prev, ...updates };
         syncToUrl(next);
         return next;
       });
@@ -71,17 +71,21 @@ export function useCustomerFilters() {
 
   const resetFilters = useCallback(() => {
     setFilters(DEFAULT_FILTERS);
-    router.replace(pathname, { scroll: false });
-  }, [router, pathname]);
+    syncToUrl(DEFAULT_FILTERS);
+  }, [syncToUrl]);
 
-  const activeFilterCount = [
-    filters.search,
-    filters.statuses.length > 0,
-    filters.companies.length > 0,
-    filters.dateRange.from || filters.dateRange.to,
-    filters.phone,
-    filters.email,
-  ].filter(Boolean).length;
+  const activeFilterCount =
+    (filters.search ? 1 : 0) +
+    filters.statuses.length +
+    filters.companies.length +
+    (filters.dateRange?.from ? 1 : 0) +
+    (filters.phone ? 1 : 0) +
+    (filters.email ? 1 : 0);
 
-  return { filters, updateFilters, resetFilters, activeFilterCount };
+  return {
+    filters,
+    updateFilters,
+    resetFilters,
+    activeFilterCount,
+  };
 }

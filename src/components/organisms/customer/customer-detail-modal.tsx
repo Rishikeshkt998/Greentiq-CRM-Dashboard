@@ -1,9 +1,7 @@
 'use client';
 
-import { X, Pencil, Mail, Phone, Building2, Calendar, DollarSign, User, Copy } from 'lucide-react';
+import { X, Copy, TrendingUp } from 'lucide-react';
 import { Customer } from '@/types/customer/entity';
-import { StatusPill } from '@/components/atoms/status-pill';
-import { formatDate, formatCurrency } from '@/lib/utils/formatters';
 import { useAuth } from '@/hooks/auth/use-auth';
 import { useDeleteCustomer } from '@/hooks/customer/use-customers';
 import { cn } from '@/lib/utils/cn';
@@ -17,27 +15,31 @@ interface CustomerDetailModalProps {
 }
 
 function getInitials(name: string) {
-  return name
-    .split(' ')
-    .map((n) => n[0])
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
+  return name.split(' ').map((n) => n[0]).slice(0, 2).join('').toUpperCase();
 }
 
 const avatarColors = [
-  'bg-teal-600',
-  'bg-blue-600',
-  'bg-violet-600',
-  'bg-rose-600',
-  'bg-amber-600',
-  'bg-emerald-600',
-  'bg-indigo-600',
+  'bg-teal-600', 'bg-blue-600', 'bg-violet-600',
+  'bg-rose-600', 'bg-amber-600', 'bg-emerald-600', 'bg-indigo-600',
 ];
 
 function getAvatarColor(name: string) {
-  const index = name.charCodeAt(0) % avatarColors.length;
-  return avatarColors[index];
+  return avatarColors[name.charCodeAt(0) % avatarColors.length];
+}
+
+function statusBadgeClass(status: string) {
+  switch (status) {
+    case 'Active':   return 'bg-emerald-600 text-white';
+    case 'Prospect': return 'bg-amber-600 text-white';
+    case 'Lead':     return 'bg-amber-500 text-white';
+    case 'Inactive': return 'bg-gray-500 text-white';
+    case 'Archive':  return 'bg-gray-600 text-white';
+    default:         return 'bg-blue-600 text-white';
+  }
+}
+
+function statusLabel(status: string) {
+  return status === 'Active' ? 'Active Client' : status;
 }
 
 export function CustomerDetailModal({ customer, open, onClose, onEdit }: CustomerDetailModalProps) {
@@ -58,155 +60,166 @@ export function CustomerDetailModal({ customer, open, onClose, onEdit }: Custome
     }
   };
 
+  const formatDate = (iso: string) => {
+    if (!iso) return '—';
+    try { return new Date(iso).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }); }
+    catch { return iso; }
+  };
+
+  const formatDateTime = (iso: string) => {
+    if (!iso) return '—';
+    try { return new Date(iso).toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit', hour12: true }); }
+    catch { return iso; }
+  };
+
+  const noteDate = customer.lastContactDate
+    ? new Date(customer.lastContactDate).toLocaleDateString('en-US', { day: '2-digit', month: 'short' })
+    : '—';
+
   return (
     <>
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      {/* Modal */}
-      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-2xl -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-2xl border border-white/10 bg-[hsl(220,38%,11%)] shadow-2xl max-h-[90vh] overflow-y-auto scrollbar-thin">
+      <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs" onClick={onClose} />
+
+      {/* Modal — theme-aware */}
+      <div className="fixed left-1/2 top-1/2 z-50 w-full max-w-[480px] -translate-x-1/2 -translate-y-1/2 rounded-2xl border border-border/80 bg-card shadow-2xl max-h-[92vh] overflow-y-auto scrollbar-thin transition-colors duration-200">
+
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-white/[0.07] px-6 py-4">
-          <h2 className="text-lg font-bold text-white">Customer Details</h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-1.5 text-muted-foreground hover:bg-white/10 hover:text-white transition-colors"
-          >
-            <X className="h-5 w-5" />
+        <div className="flex items-center justify-between border-b border-border/60 px-5 pt-4 pb-3">
+          <h2 className="text-sm font-bold text-foreground">Customer Details</h2>
+          <button onClick={onClose} className="rounded-lg p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors">
+            <X className="h-4 w-4" />
           </button>
         </div>
 
-        {/* Customer Hero */}
-        <div className="px-6 pt-5 pb-4">
-          <div className="flex items-start gap-4">
-            {/* Avatar / Initials */}
-            <div
-              className={cn(
-                'flex h-16 w-16 flex-shrink-0 items-center justify-center rounded-full text-xl font-bold text-white shadow-lg',
-                getAvatarColor(customer.name)
-              )}
-            >
-              {getInitials(customer.name)}
-            </div>
+        {/* Hero Row */}
+        <div className="flex items-start gap-4 px-5 pt-4 pb-3">
+          <div className={cn('flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-full text-base font-extrabold text-white shadow-md', getAvatarColor(customer.name))}>
+            {getInitials(customer.name)}
+          </div>
 
-            {/* Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <h3 className="text-xl font-bold text-white">{customer.name}</h3>
-                  <p className="text-sm text-muted-foreground mt-0.5">{customer.title || 'Contact'}</p>
-                  {customer.company && (
-                    <div className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground">
-                      <Building2 className="h-3.5 w-3.5" />
-                      {customer.company}
-                    </div>
-                  )}
+          <div className="flex-1 min-w-0">
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="text-base font-bold text-foreground leading-snug">{customer.name}</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">{customer.title || 'Contact'}</p>
+                <div className="flex items-center gap-1.5 mt-1">
+                  <TrendingUp className="h-3 w-3 text-blue-500 flex-shrink-0" />
+                  <span className="text-xs text-muted-foreground">{customer.company}</span>
                 </div>
-                {/* Action buttons */}
-                <div className="flex items-center gap-2 flex-shrink-0">
-                  {permissions.canDeleteCustomer && (
-                    <button
-                      onClick={handleDelete}
-                      className="rounded-lg border border-red-500/40 px-4 py-1.5 text-sm font-medium text-red-400 hover:bg-red-500/10 transition-colors"
-                    >
-                      Delete
-                    </button>
-                  )}
-                  {permissions.canEditCustomer && (
-                    <button
-                      onClick={() => onEdit(customer)}
-                      className="rounded-lg bg-primary px-4 py-1.5 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
-                    >
-                      Edit Customer
-                    </button>
-                  )}
-                </div>
+              </div>
+              <div className="flex items-center gap-2 flex-shrink-0">
+                {permissions.canDeleteCustomer && (
+                  <button
+                    onClick={handleDelete}
+                    className="rounded-lg border border-red-500/60 px-3 py-1.5 text-[11px] font-semibold text-red-500 hover:bg-red-500/10 transition-colors"
+                  >
+                    Delete
+                  </button>
+                )}
+                {permissions.canEditCustomer && (
+                  <button
+                    onClick={() => onEdit(customer)}
+                    className="rounded-lg bg-blue-600 hover:bg-blue-700 px-3 py-1.5 text-[11px] font-bold text-white transition-colors"
+                  >
+                    Edit Customer
+                  </button>
+                )}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="border-t border-white/[0.07] mx-6" />
+        {/* Info Grid (Responsive 1-col on mobile, 2-col on desktop) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-0 px-5 pb-3 border-b border-border/40">
+          {/* Left: Contact Information */}
+          <div className="space-y-3 sm:pr-5 border-b sm:border-b-0 sm:border-r border-border/40 pb-3 sm:pb-0">
+            <h4 className="text-xs font-bold text-foreground">Contact Information</h4>
 
-        {/* Details Grid */}
-        <div className="grid grid-cols-2 gap-0 divide-x divide-white/[0.07] px-6 py-5">
-          {/* Contact Information */}
-          <div className="pr-6 space-y-4">
-            <h4 className="text-sm font-semibold text-white">Contact Information</h4>
-            <div className="space-y-3">
-              <InfoRow label="Email">
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-foreground/90 truncate">{customer.email}</span>
-                  <button
-                    onClick={() => handleCopy(customer.email)}
-                    className="flex-shrink-0 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <Copy className="h-3.5 w-3.5" />
-                  </button>
-                </div>
-              </InfoRow>
-              <InfoRow label="Phone">
-                <span className="text-sm text-foreground/90">{customer.phone}</span>
-              </InfoRow>
+            <div className="space-y-0.5">
+              <p className="text-[10px] text-muted-foreground font-medium">Email</p>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-foreground">{customer.email}</span>
+                <button onClick={() => handleCopy(customer.email)} className="text-muted-foreground hover:text-foreground transition-colors flex-shrink-0">
+                  <Copy className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-0.5">
+              <p className="text-[10px] text-muted-foreground font-medium">Phone</p>
+              <span className="text-xs text-foreground">{customer.phone}</span>
             </div>
 
             {/* Timelines */}
-            <h4 className="text-sm font-semibold text-white pt-2">Timelines</h4>
-            <div className="space-y-3">
-              <InfoRow label="Last Contact">
-                <span className="text-sm text-foreground/90">{formatDate(customer.lastContactDate)}</span>
-              </InfoRow>
-              <InfoRow label="Created Date">
-                <span className="text-sm text-foreground/90">
-                  {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—'}
-                </span>
-              </InfoRow>
+            <div className="pt-2 border-t border-border/40 space-y-1.5">
+              <h4 className="text-xs font-bold text-foreground">Timelines</h4>
+              <div className="space-y-0.5">
+                <p className="text-[10px] text-muted-foreground font-medium">Last Contact</p>
+                <span className="text-xs text-foreground">{formatDateTime(customer.lastContactDate)}</span>
+              </div>
             </div>
           </div>
 
-          {/* Company & Status */}
-          <div className="pl-6 space-y-4">
-            <h4 className="text-sm font-semibold text-white">Company &amp; Status</h4>
-            <div className="space-y-3">
-              <InfoRow label="Company">
-                <span className="text-sm text-foreground/90">{customer.company || '—'}</span>
-              </InfoRow>
-              <InfoRow label="Status">
-                <StatusPill status={customer.status} />
-              </InfoRow>
-              <InfoRow label="Deal Value">
-                <span className="text-sm font-semibold text-foreground">
-                  {customer.dealValue ? formatCurrency(customer.dealValue) : '—'}
-                </span>
-              </InfoRow>
-              <InfoRow label="Account Owner">
-                <span className="text-sm text-foreground/90">{customer.accountOwner || '—'}</span>
-              </InfoRow>
+          {/* Right: Company & Status */}
+          <div className="space-y-3 pl-5">
+            <h4 className="text-xs font-bold text-foreground">Company &amp; Status</h4>
+
+            <div className="space-y-0.5">
+              <p className="text-[10px] text-muted-foreground font-medium">Company</p>
+              <span className="text-xs text-foreground">{customer.company}</span>
+            </div>
+
+            <div className="space-y-0.5">
+              <p className="text-[10px] text-muted-foreground font-medium">Status</p>
+              <span className={cn('inline-flex items-center rounded-md px-2 py-0.5 text-[10px] font-semibold', statusBadgeClass(customer.status))}>
+                {statusLabel(customer.status)}
+              </span>
+            </div>
+
+            {customer.dealValue && (
+              <div className="space-y-0.5">
+                <p className="text-[10px] text-muted-foreground font-medium">Deal Value</p>
+                <span className="text-xs text-foreground">${customer.dealValue.toLocaleString()}</span>
+              </div>
+            )}
+
+            <div className="space-y-0.5">
+              <p className="text-[10px] text-muted-foreground font-medium">Account Owner</p>
+              <span className="text-xs text-foreground">{customer.accountOwner || 'Sarah Chen'}</span>
+            </div>
+
+            <div className="space-y-0.5">
+              <p className="text-[10px] text-muted-foreground font-medium">Created Date</p>
+              <span className="text-xs text-foreground">{formatDate(customer.createdAt)}</span>
             </div>
           </div>
         </div>
 
-        {/* Notes */}
-        {customer.notes && (
-          <div className="border-t border-white/[0.07] mx-6 pt-5 pb-6">
-            <h4 className="text-sm font-semibold text-white mb-3">Notes &amp; Interactions</h4>
-            <div className="rounded-xl border border-white/[0.08] bg-white/[0.03] p-4">
-              <p className="text-sm text-foreground/80 leading-relaxed">{customer.notes}</p>
+        {/* Notes & Interactions */}
+        <div className="px-5 pt-3 pb-5 space-y-2">
+          <h4 className="text-xs font-bold text-foreground">Notes &amp; Interactions</h4>
+
+          {customer.notes ? (
+            <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
+              <div className="flex items-start justify-between gap-3">
+                <p className="text-[11px] text-foreground/80 leading-relaxed flex-1">{customer.notes}</p>
+                <span className="text-[10px] text-muted-foreground font-medium whitespace-nowrap flex-shrink-0">{noteDate}</span>
+              </div>
             </div>
+          ) : (
+            <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
+              <p className="text-[11px] text-muted-foreground italic">No notes yet.</p>
+            </div>
+          )}
+
+          <div className="flex items-center justify-end">
+            <span className="text-[10px] text-muted-foreground/60">
+              {customer.updatedAt ? new Date(customer.updatedAt).toLocaleDateString('en-US', { day: '2-digit', month: 'short' }) : '—'}
+            </span>
           </div>
-        )}
+        </div>
       </div>
     </>
-  );
-}
-
-function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <div className="space-y-0.5">
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <div>{children}</div>
-    </div>
   );
 }

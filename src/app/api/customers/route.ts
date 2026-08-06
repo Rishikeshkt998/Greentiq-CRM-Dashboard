@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { getCustomersStore, createCustomerStore } from '@/lib/db/db-adapter';
 import { filterQuerySchema, customerSchema } from '@/schemas';
 import { env } from '@/config/env';
+import { Customer } from '@/types/customer/entity';
 
 export async function GET(request: NextRequest) {
   try {
@@ -34,7 +35,17 @@ export async function GET(request: NextRequest) {
     };
 
     const query = filterQuerySchema.parse(rawParams);
-    const allCustomers = await getCustomersStore();
+    const rawCustomers = await getCustomersStore();
+
+    // 100% Unique Customers Map (Guarantees 1 user per row)
+    const uniqueMap = new Map<string, Customer>();
+    rawCustomers.forEach((c) => {
+      const key = (c.email || c.name || c.id).toLowerCase().trim();
+      if (!uniqueMap.has(key)) {
+        uniqueMap.set(key, c);
+      }
+    });
+    const allCustomers = Array.from(uniqueMap.values());
 
     // Available companies list for dropdowns
     const availableCompanies = Array.from(new Set(allCustomers.map((c) => c.company))).sort();

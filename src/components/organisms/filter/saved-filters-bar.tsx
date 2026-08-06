@@ -8,14 +8,14 @@ import { fetchSavedFilters, reorderFilterPresets } from '@/services/filter/filte
 import { savedFilterKeys } from '@/services/customer/query-keys';
 import { SavedFilterPreset } from '@/types/filter/preset';
 import { CustomerFilterState } from '@/types/filter/state';
-import { GripVertical, X, Sparkles } from 'lucide-react';
+import { GripVertical, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
 
 interface SavedFiltersBarProps {
   onApplyFilter: (state: Partial<CustomerFilterState>) => void;
 }
 
-function SortableFilterChip({ preset, onApply, onRemove }: { preset: SavedFilterPreset; onApply: () => void; onRemove?: () => void }) {
+function SortableFilterChip({ preset, onApply }: { preset: SavedFilterPreset; onApply: () => void }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: preset.id });
 
   return (
@@ -23,20 +23,20 @@ function SortableFilterChip({ preset, onApply, onRemove }: { preset: SavedFilter
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={cn(
-        "flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-medium transition-all cursor-pointer group",
+        'flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold transition-all cursor-pointer group select-none',
         isDragging
-          ? "border-violet-500/50 bg-violet-500/20 text-violet-300 opacity-80 scale-105 shadow-lg z-10"
-          : "border-white/10 bg-white/5 text-muted-foreground hover:border-violet-500/40 hover:bg-violet-500/10 hover:text-violet-300",
-        preset.isSystemPreset && "border-violet-500/20 bg-violet-500/5"
+          ? 'border-primary bg-primary/20 text-primary opacity-80 scale-105 shadow-md z-10'
+          : 'border-border bg-card text-muted-foreground hover:border-primary/50 hover:bg-primary/10 hover:text-primary',
+        preset.isSystemPreset && 'border-primary/20 bg-primary/5'
       )}
     >
       {!preset.isSystemPreset && (
-        <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground/50 hover:text-muted-foreground transition-colors">
+        <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground transition-colors">
           <GripVertical className="h-3 w-3" />
         </button>
       )}
       <button onClick={onApply} className="flex items-center gap-1.5">
-        {preset.isSystemPreset && <Sparkles className="h-2.5 w-2.5 text-violet-400/70" />}
+        {preset.isSystemPreset && <Sparkles className="h-3 w-3 text-primary/70" />}
         {preset.name}
       </button>
     </div>
@@ -56,17 +56,17 @@ export function SavedFiltersBar({ onApplyFilter }: SavedFiltersBarProps) {
   });
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
     if (over && active.id !== over.id) {
-      const oldIndex = savedFilters.findIndex(f => f.id === active.id);
-      const newIndex = savedFilters.findIndex(f => f.id === over.id);
+      const oldIndex = savedFilters.findIndex((f) => f.id === active.id);
+      const newIndex = savedFilters.findIndex((f) => f.id === over.id);
       const reordered = arrayMove(savedFilters, oldIndex, newIndex);
-      reorder(reordered.map(f => f.id));
+      reorder(reordered.map((f) => f.id));
     }
   };
 
@@ -74,11 +74,11 @@ export function SavedFiltersBar({ onApplyFilter }: SavedFiltersBarProps) {
 
   return (
     <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin pb-0.5">
-      <span className="flex-shrink-0 text-xs font-medium text-muted-foreground/60">Quick Filters:</span>
+      <span className="flex-shrink-0 text-xs font-semibold text-muted-foreground">Quick Filters:</span>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-        <SortableContext items={savedFilters.map(f => f.id)} strategy={horizontalListSortingStrategy}>
+        <SortableContext items={savedFilters.map((f) => f.id)} strategy={horizontalListSortingStrategy}>
           <div className="flex items-center gap-2">
-            {savedFilters.map(preset => (
+            {savedFilters.map((preset) => (
               <SortableFilterChip
                 key={preset.id}
                 preset={preset}

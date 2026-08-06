@@ -4,7 +4,7 @@ const envSchema = z.object({
   // Public Client Variables
   NEXT_PUBLIC_APP_NAME: z.string().default('Greentiq Innovations CRM'),
   NEXT_PUBLIC_APP_URL: z.string().default('http://localhost:3000'),
-  NEXT_PUBLIC_DEFAULT_PAGE_SIZE: z.coerce.number().default(10),
+  NEXT_PUBLIC_DEFAULT_PAGE_SIZE: z.coerce.number().default(8),
 
   // Feature Flags
   ENABLE_AUTH: z.preprocess((val) => val === 'true' || val === true, z.boolean()).default(false),
