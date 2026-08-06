@@ -12,7 +12,7 @@ const MOCK_ADMIN_USER: User = {
   name: 'Alex Rivera',
   email: 'admin@greentiq.com',
   role: 'Admin',
-  avatarUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
+  avatarUrl: undefined,
   title: 'Senior CRM Director',
 };
 

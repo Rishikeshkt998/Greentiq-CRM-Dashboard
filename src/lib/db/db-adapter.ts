@@ -29,7 +29,7 @@ export async function createCustomerStore(input: CreateCustomerInput): Promise<C
     ...input,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    avatarUrl: `https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=100&auto=format&fit=crop&q=80`,
+    avatarUrl: undefined,
   };
 
   if (process.env.MONGODB_URI) {

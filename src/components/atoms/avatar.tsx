@@ -36,8 +36,8 @@ export function Avatar({ src, name, size = 'md', className }: AvatarProps) {
   const sizeClass = sizeMap[size];
   const gradient = getGradient(name);
 
-  // If URL is invalid or synthetic broken Unsplash URL, trigger fallback
-  const isInvalidUrl = !src || src.includes('photo-1500000000000');
+  // Ignore unsplash URLs because Unsplash returns a 200 OK beach 404 graphic for invalid IDs
+  const isInvalidUrl = !src || src.includes('unsplash.com');
 
   if (!isInvalidUrl && !imageError) {
     return (
