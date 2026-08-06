@@ -7,8 +7,8 @@ const envSchema = z.object({
   NEXT_PUBLIC_DEFAULT_PAGE_SIZE: z.coerce.number().default(10),
 
   // Feature Flags
-  ENABLE_AUTH: z.coerce.boolean().default(false),
-  ENABLE_MOCK_DELAY: z.coerce.boolean().default(true),
+  ENABLE_AUTH: z.preprocess((val) => val === 'true' || val === true, z.boolean()).default(false),
+  ENABLE_MOCK_DELAY: z.preprocess((val) => val === 'true' || val === true, z.boolean()).default(true),
 
   // Server Secrets
   JWT_ACCESS_SECRET: z.string().default('greentiq_access_token_secret_2026_super_key'),
