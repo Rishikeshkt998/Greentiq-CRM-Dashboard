@@ -77,7 +77,7 @@ function generate150Customers(): Customer[] {
       lastContactDate: dateStr,
       createdAt: '2022-01-10T10:00:00Z',
       updatedAt: '2023-11-12T14:30:00Z',
-      avatarUrl: `https://images.unsplash.com/photo-${1500000000000 + (i * 12345) % 1000000}?w=100&auto=format&fit=crop&q=80`,
+      avatarUrl: undefined,
       notes: `Met at TechSummit 2023. Discussed Q4 marketing strategy upgrade. Deal value estimated at $${(i * 1500) % 50000 + 10000}.`,
       dealValue: (i * 2500) % 75000 + 5000,
       accountOwner: i % 2 === 0 ? 'Alex Rivera' : 'Sarah Chen',
