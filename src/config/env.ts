@@ -16,6 +16,7 @@ const envSchema = z.object({
   RATE_LIMIT_WINDOW_MS: z.coerce.number().default(60000),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().default(60),
   MOCK_API_SIMULATED_LATENCY_MS: z.coerce.number().default(400),
+  ENABLE_CSP_NONCE: z.preprocess((val) => val === 'true' || val === true, z.boolean()).default(false),
 
   // Database Connection (Optional)
   MONGODB_URI: z.string().optional(),

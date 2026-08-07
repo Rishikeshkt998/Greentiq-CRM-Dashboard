@@ -40,15 +40,14 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  // 3. Dynamic CSP Nonce Generation
-  const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
-  const { cspHeader, requestHeaders } = generateCspHeader(nonce, request.headers);
+  // 3. Content Security Policy Headers
+  const { cspHeader, nonce } = generateCspHeader(env.ENABLE_CSP_NONCE);
 
-  const response = NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
+  const response = NextResponse.next();
+
+  if (nonce) {
+    response.headers.set('x-csp-nonce', nonce);
+  }
 
   // Inject Security Headers
   response.headers.set('Content-Security-Policy', cspHeader);

@@ -1,11 +1,18 @@
-export function generateCspHeader(nonce: string, incomingHeaders: Headers) {
-  const requestHeaders = new Headers(incomingHeaders);
-  requestHeaders.set('x-nonce', nonce);
+export function generateCspHeader(useNonce: boolean) {
+  const nonce = useNonce ? crypto.randomUUID() : null;
+  const defaultSrc = `default-src 'self';`;
+  const scriptSrc = useNonce
+    ? `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''};`
+    : `script-src 'self' 'unsafe-inline' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''};`;
+
+  const styleSrc = useNonce
+    ? `style-src 'self' 'nonce-${nonce}';`
+    : `style-src 'self' 'unsafe-inline';`;
 
   const cspHeader = `
-    default-src 'self';
-    script-src 'self' 'nonce-${nonce}' 'strict-dynamic' ${process.env.NODE_ENV === 'development' ? "'unsafe-eval'" : ''};
-    style-src 'self' 'nonce-${nonce}' 'unsafe-inline';
+    ${defaultSrc}
+    ${scriptSrc}
+    ${styleSrc}
     img-src 'self' blob: data: https://images.unsplash.com https://avatar.vercel.sh;
     font-src 'self' data:;
     object-src 'none';
@@ -16,5 +23,5 @@ export function generateCspHeader(nonce: string, incomingHeaders: Headers) {
     upgrade-insecure-requests;
   `.replace(/\s{2,}/g, ' ').trim();
 
-  return { cspHeader, requestHeaders };
+  return { cspHeader, nonce };
 }
