@@ -1,14 +1,4 @@
-import { User } from '@/types/auth/session';
-
-export interface LoginPayload {
-  email: string;
-  password: string;
-}
-
-export interface LoginResponse {
-  user: User;
-  accessToken: string;
-}
+import { LoginPayload, LoginResponse } from './auth-types';
 
 export async function loginUser(payload: LoginPayload): Promise<LoginResponse> {
   const response = await fetch('/api/auth/login', {

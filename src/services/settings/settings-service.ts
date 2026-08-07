@@ -1,22 +1,4 @@
-export interface SystemSettings {
-  userName: string;
-  userEmail: string;
-  userRole: 'Admin' | 'Manager' | 'Viewer';
-  pageSize: number;
-  exportFormat: 'CSV' | 'JSON';
-  autoRefresh: boolean;
-}
-
-const STORAGE_KEY = 'greentiq_crm_settings_v1';
-
-const DEFAULT_SETTINGS: SystemSettings = {
-  userName: 'Administrator',
-  userEmail: 'admin@greentiq.com',
-  userRole: 'Admin',
-  pageSize: 8,
-  exportFormat: 'CSV',
-  autoRefresh: true,
-};
+import { DEFAULT_SETTINGS, STORAGE_KEY, SystemSettings } from './settings-constants';
 
 export function getStoredSettings(): SystemSettings {
   if (typeof window === 'undefined') return DEFAULT_SETTINGS;
