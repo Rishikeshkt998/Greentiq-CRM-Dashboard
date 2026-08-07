@@ -1,4 +1,5 @@
 import { DEFAULT_DEALS, STORAGE_KEY, Deal } from './deal-constants';
+export type { Deal } from './deal-constants';
 
 export function getStoredDeals(): Deal[] {
   if (typeof window === 'undefined') return DEFAULT_DEALS;
