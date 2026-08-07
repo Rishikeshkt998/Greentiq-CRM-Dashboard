@@ -1,6 +1,6 @@
 'use client';
 
-import { CheckSquare2, Trash2 } from 'lucide-react';
+import { CheckSquare2, Trash2, X } from 'lucide-react';
 import { CustomerStatus } from '@/types/customer/entity';
 
 const ALL_STATUSES: CustomerStatus[] = ['Active', 'Inactive', 'Prospect', 'Lead', 'Archive'];
@@ -62,12 +62,14 @@ export function BulkActionsBar({
         </button>
       )}
 
-      {/* Clear Selection */}
+      {/* Deselect All Button */}
       <button
         onClick={onClearSelection}
-        className="ml-auto text-xs text-muted-foreground hover:text-foreground transition-colors"
+        className="ml-auto flex items-center gap-1 rounded-lg border border-border/80 bg-card hover:bg-muted px-2.5 py-1 text-xs font-bold text-foreground transition-colors cursor-pointer shadow-2xs"
+        title="Deselect all items"
       >
-        Clear
+        <X className="h-3.5 w-3.5 text-muted-foreground" />
+        Deselect All
       </button>
     </div>
   );

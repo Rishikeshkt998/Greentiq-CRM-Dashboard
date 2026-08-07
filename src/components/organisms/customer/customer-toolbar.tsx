@@ -40,7 +40,7 @@ export function CustomerToolbar({
   onAddCustomer,
 }: CustomerToolbarProps) {
   return (
-    <div className="flex-shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-1 overflow-visible pt-2 sm:pt-3 pb-1">
+    <div className="flex-shrink-0 flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-2 sm:px-3 ml-1 sm:ml-2 overflow-visible pt-2 sm:pt-3 pb-1">
       <h2 className="text-xl sm:text-2xl font-extrabold text-foreground tracking-tight">Customers</h2>
 
       <div className="flex flex-wrap items-center gap-2 sm:gap-2.5 sm:ml-auto overflow-visible">

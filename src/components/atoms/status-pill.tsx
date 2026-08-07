@@ -1,10 +1,7 @@
-import { CustomerStatus } from '@/types/customer/entity';
 import { cn } from '@/lib/utils/cn';
+import { StatusPillProps } from '@/types/status-pill';
 
-interface StatusPillProps {
-  status: CustomerStatus | string;
-  className?: string;
-}
+export type { StatusPillProps };
 
 export function StatusPill({ status, className }: StatusPillProps) {
   let badgeStyle = 'bg-[#16a34a] text-white';

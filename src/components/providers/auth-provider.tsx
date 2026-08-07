@@ -1,35 +1,17 @@
 'use client';
 
-import React, { createContext, useCallback, useEffect, useRef, useState } from 'react';
-import { User, UserSession, AuthState } from '@/types/auth/session';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { User, UserSession, AuthState, AuthContextValue, AuthProviderProps } from '@/types/auth';
 import { ROLE_PERMISSIONS, PermissionMatrix } from '@/types/auth/rbac';
 import { loginUser, logoutUser, refreshAccessToken } from '@/services/auth/auth-service';
+import { setAccessToken as saveTokenToStore } from '@/services/auth/token-store';
+import { verifyAccessToken } from '@/lib/utils/jwt';
+import { MOCK_ADMIN_USER } from '@/config';
+import { AuthContext } from './auth-context';
 import { toast } from 'sonner';
 
-// Default mock Admin session for when ENABLE_AUTH=false
-const MOCK_ADMIN_USER: User = {
-  id: 'usr-1',
-  name: 'Alex Rivera',
-  email: 'admin@greentiq.com',
-  role: 'Admin',
-  avatarUrl: undefined,
-  title: 'Senior CRM Director',
-};
-
-interface AuthContextValue extends AuthState {
-  accessToken: string | null;
-  permissions: PermissionMatrix;
-  login: (email: string, password: string) => Promise<void>;
-  logout: () => Promise<void>;
-  isAuthEnabled: boolean;
-}
-
-export const AuthContext = createContext<AuthContextValue | null>(null);
-
-interface AuthProviderProps {
-  children: React.ReactNode;
-  isAuthEnabled: boolean;
-}
+export { AuthContext };
+export type { AuthContextValue, AuthProviderProps };
 
 export function AuthProvider({ children, isAuthEnabled }: AuthProviderProps) {
   const [authState, setAuthState] = useState<AuthState>({
@@ -37,8 +19,13 @@ export function AuthProvider({ children, isAuthEnabled }: AuthProviderProps) {
     isAuthenticated: !isAuthEnabled,
     isLoading: false,
   });
-  const [accessToken, setAccessToken] = useState<string | null>(null);
+  const [accessToken, setAccessTokenState] = useState<string | null>(null);
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const updateAccessToken = (token: string | null) => {
+    setAccessTokenState(token);
+    saveTokenToStore(token);
+  };
 
   // Auto-refresh access token before expiry (every 12 minutes)
   const scheduleTokenRefresh = useCallback(() => {
@@ -46,11 +33,24 @@ export function AuthProvider({ children, isAuthEnabled }: AuthProviderProps) {
     refreshTimerRef.current = setTimeout(async () => {
       try {
         const data = await refreshAccessToken();
-        setAccessToken(data.accessToken);
+        updateAccessToken(data.accessToken);
+        const payload = verifyAccessToken(data.accessToken);
+        if (payload) {
+          setAuthState({
+            user: {
+              id: payload.userId,
+              name: payload.name,
+              email: payload.email,
+              role: payload.role,
+            },
+            isAuthenticated: true,
+            isLoading: false,
+          });
+        }
         scheduleTokenRefresh();
       } catch {
         setAuthState({ user: null, isAuthenticated: false, isLoading: false });
-        setAccessToken(null);
+        updateAccessToken(null);
         toast.error('Your session has expired. Please log in again.');
       }
     }, 12 * 60 * 1000); // 12 minutes
@@ -62,7 +62,7 @@ export function AuthProvider({ children, isAuthEnabled }: AuthProviderProps) {
       try {
         const { user, accessToken: token } = await loginUser({ email, password });
         setAuthState({ user, isAuthenticated: true, isLoading: false });
-        setAccessToken(token);
+        updateAccessToken(token);
         scheduleTokenRefresh();
         toast.success(`Welcome back, ${user.name}!`);
       } catch (error: any) {
@@ -79,26 +79,41 @@ export function AuthProvider({ children, isAuthEnabled }: AuthProviderProps) {
     } finally {
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
       setAuthState({ user: null, isAuthenticated: false, isLoading: false });
-      setAccessToken(null);
+      updateAccessToken(null);
       toast.info('You have been logged out.');
     }
   }, []);
 
   useEffect(() => {
+    if (isAuthEnabled) {
+      setAuthState((prev) => ({ ...prev, isLoading: true }));
+      refreshAccessToken()
+        .then((data) => {
+          updateAccessToken(data.accessToken);
+          const payload = verifyAccessToken(data.accessToken);
+          setAuthState({
+            user: payload
+              ? { id: payload.userId, name: payload.name, email: payload.email, role: payload.role }
+              : MOCK_ADMIN_USER,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+          scheduleTokenRefresh();
+        })
+        .catch(() => {
+          setAuthState({ user: null, isAuthenticated: false, isLoading: false });
+          updateAccessToken(null);
+        });
+    }
     return () => {
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
     };
-  }, []);
+  }, [isAuthEnabled, scheduleTokenRefresh]);
 
   const permissions: PermissionMatrix = authState.user
     ? ROLE_PERMISSIONS[authState.user.role]
-    : {
-        canViewCustomers: false,
-        canAddCustomer: false,
-        canEditCustomer: false,
-        canDeleteCustomer: false,
-        canReorderFilters: false,
-      };
+    : ROLE_PERMISSIONS['Admin'];
+
 
   return (
     <AuthContext.Provider

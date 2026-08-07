@@ -27,7 +27,8 @@ export async function middleware(request: NextRequest) {
   }
 
   // 2. Feature-Flagged Auth Protection
-  if (env.ENABLE_AUTH && request.nextUrl.pathname.startsWith('/api/customers')) {
+  const isAuthRequired = process.env.ENABLE_AUTH === 'true';
+  if (isAuthRequired && request.nextUrl.pathname.startsWith('/api/customers')) {
     const authHeader = request.headers.get('authorization');
     const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
 

@@ -2,15 +2,10 @@
 
 import { Sun, Moon, Menu } from 'lucide-react';
 import { Avatar } from '@/components/atoms/avatar';
-import { User } from '@/types/auth/session';
+import { TopHeaderProps } from '@/types/layout';
 
-interface TopHeaderProps {
-  title: string;
-  isDarkMode: boolean;
-  onToggleTheme: () => void;
-  user: User | null;
-  onToggleMobileSidebar?: () => void;
-}
+export type { TopHeaderProps };
+
 
 export function TopHeader({ title, isDarkMode, onToggleTheme, user, onToggleMobileSidebar }: TopHeaderProps) {
   return (

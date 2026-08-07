@@ -10,5 +10,5 @@ export const customerKeys = {
 
 export const savedFilterKeys = {
   all: ['saved-filters'] as const,
-  lists: () => [...savedFilterKeys.all, 'list'] as const,
+  lists: () => ['saved-filters'] as const,
 };

@@ -1,7 +1,15 @@
 import { CustomerFilterState } from '@/types/filter/state';
-import { CreateCustomerInput, UpdateCustomerInput } from '@/types/customer/entity';
+import { CreateCustomerInput, UpdateCustomerInput, Customer } from '@/types/customer/entity';
 import { PaginatedResponse } from '@/types/api/response';
-import { Customer } from '@/types/customer/entity';
+import { getAccessToken } from '@/services/auth/token-store';
+
+function getAuthHeaders(headers: Record<string, string> = {}): Record<string, string> {
+  const token = getAccessToken();
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
 
 function buildQueryString(filters: Partial<CustomerFilterState>): string {
   const params = new URLSearchParams();
@@ -24,16 +32,20 @@ function buildQueryString(filters: Partial<CustomerFilterState>): string {
 
 export async function fetchCustomers(filters: Partial<CustomerFilterState>): Promise<PaginatedResponse<Customer>> {
   const qs = buildQueryString(filters);
-  const response = await fetch(`/api/customers?${qs}`);
+  const response = await fetch(`/api/customers?${qs}`, {
+    headers: getAuthHeaders(),
+  });
   if (!response.ok) {
-    const err = await response.json();
+    const err = await response.json().catch(() => ({}));
     throw new Error(err.error || 'Failed to fetch customers');
   }
   return response.json();
 }
 
 export async function fetchCustomerById(id: string): Promise<Customer> {
-  const response = await fetch(`/api/customers/${id}`);
+  const response = await fetch(`/api/customers/${id}`, {
+    headers: getAuthHeaders(),
+  });
   if (!response.ok) throw new Error('Customer not found');
   const data = await response.json();
   return data.data;
@@ -42,11 +54,11 @@ export async function fetchCustomerById(id: string): Promise<Customer> {
 export async function createCustomer(input: CreateCustomerInput): Promise<Customer> {
   const response = await fetch('/api/customers', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(input),
   });
   if (!response.ok) {
-    const err = await response.json();
+    const err = await response.json().catch(() => ({}));
     throw new Error(err.error || 'Failed to create customer');
   }
   const data = await response.json();
@@ -56,11 +68,11 @@ export async function createCustomer(input: CreateCustomerInput): Promise<Custom
 export async function updateCustomer(input: UpdateCustomerInput): Promise<Customer> {
   const response = await fetch(`/api/customers/${input.id}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getAuthHeaders({ 'Content-Type': 'application/json' }),
     body: JSON.stringify(input),
   });
   if (!response.ok) {
-    const err = await response.json();
+    const err = await response.json().catch(() => ({}));
     throw new Error(err.error || 'Failed to update customer');
   }
   const data = await response.json();
@@ -68,9 +80,12 @@ export async function updateCustomer(input: UpdateCustomerInput): Promise<Custom
 }
 
 export async function deleteCustomer(id: string): Promise<void> {
-  const response = await fetch(`/api/customers/${id}`, { method: 'DELETE' });
+  const response = await fetch(`/api/customers/${id}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
   if (!response.ok) {
-    const err = await response.json();
+    const err = await response.json().catch(() => ({}));
     throw new Error(err.error || 'Failed to delete customer');
   }
 }

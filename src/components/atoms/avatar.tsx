@@ -3,32 +3,10 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils/cn';
 import { getInitials } from '@/lib/utils/formatters';
+import { sizeMap, getGradient } from '@/lib/utils/avatar';
+import { AvatarProps } from '@/types/avatar';
 
-interface AvatarProps {
-  src?: string;
-  name: string;
-  size?: 'sm' | 'md' | 'lg';
-  className?: string;
-}
-
-const sizeMap = {
-  sm: 'h-7 w-7 text-xs',
-  md: 'h-9 w-9 text-sm',
-  lg: 'h-11 w-11 text-base',
-};
-
-const avatarGradients = [
-  'from-blue-600 to-indigo-600',
-  'from-teal-600 to-emerald-600',
-  'from-violet-600 to-purple-600',
-  'from-amber-600 to-orange-600',
-  'from-rose-600 to-pink-600',
-];
-
-function getGradient(name: string) {
-  const charCode = name ? name.charCodeAt(0) : 0;
-  return avatarGradients[charCode % avatarGradients.length];
-}
+export type { AvatarProps };
 
 export function Avatar({ src, name, size = 'md', className }: AvatarProps) {
   const [imageError, setImageError] = useState(false);
@@ -36,14 +14,14 @@ export function Avatar({ src, name, size = 'md', className }: AvatarProps) {
   const sizeClass = sizeMap[size];
   const gradient = getGradient(name);
 
-  // Generate deterministic realistic avatar URL based on name
-  const avatarUrl = src || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(name)}`;
-
-  if (!imageError) {
+  // Show image if src provided and hasn't errored
+  if (src && !imageError) {
     return (
-      <div className={cn('relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full border border-white/10 shadow-2xs', sizeClass, className)}>
+      <div className={cn('relative inline-flex flex-shrink-0 items-center justify-center overflow-hidden rounded-full shadow-2xs', sizeClass, className)}
+        style={{ background: gradient }}
+      >
         <img
-          src={avatarUrl}
+          src={src}
           alt={name}
           className="h-full w-full object-cover"
           onError={() => setImageError(true)}
@@ -52,16 +30,18 @@ export function Avatar({ src, name, size = 'md', className }: AvatarProps) {
     );
   }
 
+  // Fallback: gradient initials avatar
   return (
     <div
       className={cn(
-        'inline-flex flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-br font-bold text-white shadow-2xs select-none',
-        gradient,
+        'inline-flex flex-shrink-0 items-center justify-center rounded-full font-bold text-white shadow-2xs select-none',
         sizeClass,
         className
       )}
+      style={{ background: gradient }}
     >
       {initials}
     </div>
   );
 }
+

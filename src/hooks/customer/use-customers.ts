@@ -13,14 +13,16 @@ import { CustomerFilterState } from '@/types/filter/state';
 import { CreateCustomerInput, UpdateCustomerInput, Customer } from '@/types/customer/entity';
 import { PaginatedResponse } from '@/types/api/response';
 
-export function useCustomers(filters: Partial<CustomerFilterState>) {
+export function useCustomers(filters: Partial<CustomerFilterState>, enabled: boolean = true) {
   return useQuery({
     queryKey: customerKeys.list(filters),
     queryFn: () => fetchCustomers(filters),
+    enabled,
     staleTime: 30 * 1000, // 30 seconds
     placeholderData: (prev) => prev,
   });
 }
+
 
 export function useCreateCustomer() {
   const queryClient = useQueryClient();

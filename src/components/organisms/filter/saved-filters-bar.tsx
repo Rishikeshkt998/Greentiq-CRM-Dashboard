@@ -2,46 +2,13 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
-import { SortableContext, sortableKeyboardCoordinates, horizontalListSortingStrategy, useSortable, arrayMove } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
+import { SortableContext, sortableKeyboardCoordinates, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
 import { fetchSavedFilters, reorderFilterPresets } from '@/services/filter/filter-service';
 import { savedFilterKeys } from '@/services/customer/query-keys';
-import { SavedFilterPreset } from '@/types/filter/preset';
-import { CustomerFilterState } from '@/types/filter/state';
-import { GripVertical, Sparkles } from 'lucide-react';
-import { cn } from '@/lib/utils/cn';
+import { CustomerFilterState, SavedFiltersBarProps } from '@/types/filter';
+import { SortableFilterChip } from './sortable-filter-chip';
 
-interface SavedFiltersBarProps {
-  onApplyFilter: (state: Partial<CustomerFilterState>) => void;
-}
-
-function SortableFilterChip({ preset, onApply }: { preset: SavedFilterPreset; onApply: () => void }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: preset.id });
-
-  return (
-    <div
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={cn(
-        'flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold transition-all cursor-pointer group select-none',
-        isDragging
-          ? 'border-primary bg-primary/20 text-primary opacity-80 scale-105 shadow-md z-10'
-          : 'border-border bg-card text-muted-foreground hover:border-primary/50 hover:bg-primary/10 hover:text-primary',
-        preset.isSystemPreset && 'border-primary/20 bg-primary/5'
-      )}
-    >
-      {!preset.isSystemPreset && (
-        <button {...attributes} {...listeners} className="cursor-grab active:cursor-grabbing text-muted-foreground/40 hover:text-muted-foreground transition-colors">
-          <GripVertical className="h-3 w-3" />
-        </button>
-      )}
-      <button onClick={onApply} className="flex items-center gap-1.5">
-        {preset.isSystemPreset && <Sparkles className="h-3 w-3 text-primary/70" />}
-        {preset.name}
-      </button>
-    </div>
-  );
-}
+export type { SavedFiltersBarProps };
 
 export function SavedFiltersBar({ onApplyFilter }: SavedFiltersBarProps) {
   const queryClient = useQueryClient();
@@ -73,7 +40,7 @@ export function SavedFiltersBar({ onApplyFilter }: SavedFiltersBarProps) {
   if (savedFilters.length === 0) return null;
 
   return (
-    <div className="flex items-center gap-2 overflow-x-auto scrollbar-thin pb-0.5">
+    <div className="flex items-center gap-2.5 overflow-x-auto scrollbar-thin px-2 py-0.5 ml-1 sm:ml-2">
       <span className="flex-shrink-0 text-xs font-semibold text-muted-foreground">Quick Filters:</span>
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={savedFilters.map((f) => f.id)} strategy={horizontalListSortingStrategy}>

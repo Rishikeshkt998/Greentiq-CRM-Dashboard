@@ -5,6 +5,8 @@ export interface PaginatedMeta {
   totalPages: number;
   hasNextPage: boolean;
   hasPrevPage: boolean;
+  activeLeads?: number;
+  contactedThisWeek?: number;
 }
 
 export interface PaginatedResponse<T> {

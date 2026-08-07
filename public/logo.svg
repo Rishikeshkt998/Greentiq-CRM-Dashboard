@@ -1,0 +1,31 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22c58b"/>
+      <stop offset="100%" stop-color="#0a6e4d"/>
+    </linearGradient>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" rx="128" fill="url(#bg)"/>
+
+  <!-- Perfectly Symmetric Leaf Contour -->
+  <path d="M 256 80 
+           C 140 170, 140 290, 256 345 
+           C 372 290, 372 170, 256 80 Z" 
+        fill="#eafff5"/>
+
+  <!-- Symmetric Center Stem -->
+  <path d="M 256 120 L 256 320" 
+        stroke="#0a6e4d" stroke-width="14" stroke-linecap="round"/>
+
+  <!-- Symmetric Left & Right Veins -->
+  <path d="M 256 170 C 220 195, 195 215, 185 235
+           M 256 170 C 292 195, 317 215, 327 235
+           M 256 230 C 225 250, 205 265, 195 280
+           M 256 230 C 287 250, 307 265, 317 280" 
+        stroke="#0a6e4d" stroke-width="10" stroke-linecap="round" fill="none"/>
+
+  <!-- CRM Bold Text -->
+  <text x="256" y="438" text-anchor="middle"
+        font-family="system-ui, -apple-system, Arial, sans-serif" font-size="82" font-weight="900"
+        fill="#eafff5" letter-spacing="8">CRM</text>
+</svg>

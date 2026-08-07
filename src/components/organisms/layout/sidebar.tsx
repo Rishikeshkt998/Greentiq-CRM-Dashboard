@@ -1,27 +1,14 @@
 'use client';
 
-import { LayoutDashboard, Users, Tag, CheckSquare, Settings, LogOut, ChevronRight, ChevronLeft, X } from 'lucide-react';
+import { LogOut, ChevronRight, ChevronLeft, X, BarChart3 } from 'lucide-react';
 import { cn } from '@/lib/utils/cn';
+import { DashboardTab, SidebarProps } from '@/types/layout';
+import { NAV_ITEMS } from '@/config';
 
-export type DashboardTab = 'Dashboard' | 'Customers' | 'Deals' | 'Tasks' | 'Settings';
+import { AppLogo } from '@/components/atoms/app-logo';
 
-export const NAV_ITEMS: { label: DashboardTab; icon: any }[] = [
-  { label: 'Dashboard', icon: LayoutDashboard },
-  { label: 'Customers', icon: Users },
-  { label: 'Deals', icon: Tag },
-  { label: 'Tasks', icon: CheckSquare },
-  { label: 'Settings', icon: Settings },
-];
-
-interface SidebarProps {
-  activeTab: DashboardTab;
-  setActiveTab: (tab: DashboardTab) => void;
-  collapsed: boolean;
-  setCollapsed: (collapsed: boolean) => void;
-  onLogout: () => void;
-  mobileOpen?: boolean;
-  setMobileOpen?: (open: boolean) => void;
-}
+export type { DashboardTab, SidebarProps };
+export { NAV_ITEMS };
 
 export function Sidebar({
   activeTab,
@@ -42,21 +29,14 @@ export function Sidebar({
       {/* Brand Header */}
       <div className="flex items-center justify-between pb-4 pt-1 px-1 border-b border-border/40">
         {!collapsed ? (
-          <div>
-            <h2 className="text-base font-black tracking-tight text-foreground flex items-center gap-1.5">
-              <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-primary text-white font-black text-xs">
-                GT
-              </span>
-              GREENTIQ
-            </h2>
-            <p className="text-[9px] text-muted-foreground font-semibold tracking-wider uppercase mt-0.5">
-              CUSTOMER MANAGEMENT
-            </p>
+          <div className="flex items-center gap-2.5">
+            <AppLogo className="h-8 w-8" />
+            <span className="text-base font-extrabold tracking-tight text-foreground">
+              GreenTiq CRM
+            </span>
           </div>
         ) : (
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white font-black text-xs mx-auto">
-            GT
-          </div>
+          <AppLogo className="h-8 w-8 mx-auto" />
         )}
         <button
           onClick={() => {
@@ -70,28 +50,42 @@ export function Sidebar({
         </button>
       </div>
 
-      {/* Navigation Items */}
-      <nav className="flex-1 space-y-1 pt-4">
+      <nav className={cn('flex-1 space-y-0.5 pt-3', collapsed ? 'px-0' : 'px-1')}>
         {NAV_ITEMS.map((item) => {
           const isActive = activeTab === item.label;
           return (
-            <button
-              key={item.label}
-              onClick={() => {
-                setActiveTab(item.label);
-                if (setMobileOpen) setMobileOpen(false);
-              }}
-              className={cn(
-                'flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-[13px] font-medium transition-all cursor-pointer select-none',
-                isActive
-                  ? 'bg-blue-50 text-blue-600 dark:bg-primary/15 dark:text-primary font-semibold shadow-2xs'
-                  : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
-              )}
-              title={collapsed ? item.label : undefined}
-            >
-              <item.icon className="h-4 w-4 flex-shrink-0" />
-              {!collapsed && <span>{item.label}</span>}
-            </button>
+            <div key={item.label} className="relative">
+              <button
+                onClick={() => {
+                  setActiveTab(item.label);
+                  if (setMobileOpen) setMobileOpen(false);
+                }}
+                className={cn(
+                  'relative flex w-full items-center transition-all cursor-pointer select-none',
+                  collapsed
+                    ? cn(
+                        'justify-center rounded-xl p-2.5 mx-auto',
+                        isActive
+                          ? 'bg-[#eef2ff] text-[#2563eb] dark:bg-blue-500/15 dark:text-blue-400'
+                          : 'text-slate-400 hover:bg-slate-100/80 dark:text-slate-500 dark:hover:bg-slate-800/40'
+                      )
+                    : cn(
+                        'gap-3 rounded-xl pl-5 pr-3 py-2.5 text-sm font-medium overflow-hidden',
+                        isActive
+                          ? 'bg-[#eef2ff] text-[#2563eb] dark:bg-blue-500/15 dark:text-blue-400 font-semibold'
+                          : 'text-slate-500 hover:bg-slate-100/80 dark:text-slate-400 dark:hover:bg-slate-800/40'
+                      )
+                )}
+                title={collapsed ? item.label : undefined}
+              >
+                {/* Blue bar — only show in expanded mode */}
+                {isActive && !collapsed && (
+                  <span className="absolute left-0 top-0 bottom-0 w-[5px] bg-[#2563eb] dark:bg-blue-400 rounded-l-xl" />
+                )}
+                <item.icon className={cn('flex-shrink-0', collapsed ? 'h-5 w-5' : 'h-[18px] w-[18px]', isActive ? 'text-[#2563eb] dark:text-blue-400' : 'text-slate-400 dark:text-slate-500')} />
+                {!collapsed && <span>{item.label}</span>}
+              </button>
+            </div>
           );
         })}
       </nav>

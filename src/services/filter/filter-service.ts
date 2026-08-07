@@ -1,31 +1,119 @@
 import { SavedFilterPreset } from '@/types/filter/preset';
 import { CustomerFilterState } from '@/types/filter/state';
 
+const STORAGE_KEY = 'greentiq_crm_saved_filters_v2';
+
+const INITIAL_PRESETS: SavedFilterPreset[] = [
+  {
+    id: 'flt-1',
+    name: 'Active Customers',
+    filterState: { statuses: ['Active'] },
+    isSystemPreset: true,
+    order: 0,
+  },
+  {
+    id: 'flt-2',
+    name: 'Hot Prospects',
+    filterState: { statuses: ['Prospect'] },
+    isSystemPreset: false,
+    order: 1,
+  },
+  {
+    id: 'flt-3',
+    name: 'Acme Corp Accounts',
+    filterState: { companies: ['Acme Corp'] },
+    isSystemPreset: false,
+    order: 2,
+  },
+  {
+    id: 'flt-4',
+    name: 'Lead Pipeline',
+    filterState: { statuses: ['Lead'] },
+    isSystemPreset: false,
+    order: 3,
+  },
+];
+
 export async function fetchSavedFilters(): Promise<SavedFilterPreset[]> {
-  const response = await fetch('/api/saved-filters');
-  if (!response.ok) throw new Error('Failed to fetch saved filters');
-  const data = await response.json();
-  return data.data;
+  if (typeof window !== 'undefined') {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        return JSON.parse(raw);
+      }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(INITIAL_PRESETS));
+      return INITIAL_PRESETS;
+    } catch {
+      // Fallback to API fetch
+    }
+  }
+
+  try {
+    const response = await fetch('/api/saved-filters');
+    if (response.ok) {
+      const data = await response.json();
+      if (data.data && Array.isArray(data.data) && data.data.length > 0) {
+        if (typeof window !== 'undefined') {
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(data.data));
+        }
+        return data.data;
+      }
+    }
+  } catch {
+    // Ignore fetch errors
+  }
+
+  return INITIAL_PRESETS;
 }
 
 export async function saveFilterPreset(name: string, filterState: Partial<CustomerFilterState>): Promise<SavedFilterPreset> {
-  const response = await fetch('/api/saved-filters', {
+  const current = await fetchSavedFilters();
+  const newPreset: SavedFilterPreset = {
+    id: `preset-${Date.now()}`,
+    name,
+    filterState,
+    isSystemPreset: false,
+    order: current.length,
+  };
+
+  const updated = [...current, newPreset];
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  }
+
+  // Also sync to API asynchronously
+  fetch('/api/saved-filters', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ name, filterState }),
-  });
-  if (!response.ok) throw new Error('Failed to save filter preset');
-  const data = await response.json();
-  return data.data;
+  }).catch(() => {});
+
+  return newPreset;
 }
 
 export async function reorderFilterPresets(orderedIds: string[]): Promise<SavedFilterPreset[]> {
-  const response = await fetch('/api/saved-filters', {
+  const current = await fetchSavedFilters();
+  const map = new Map(current.map((f) => [f.id, f]));
+  const reordered: SavedFilterPreset[] = [];
+
+  orderedIds.forEach((id, idx) => {
+    const item = map.get(id);
+    if (item) {
+      item.order = idx;
+      reordered.push(item);
+    }
+  });
+
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(reordered));
+  }
+
+  // Also sync to API asynchronously
+  fetch('/api/saved-filters', {
     method: 'PUT',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ orderedIds }),
-  });
-  if (!response.ok) throw new Error('Failed to reorder filters');
-  const data = await response.json();
-  return data.data;
+  }).catch(() => {});
+
+  return reordered;
 }

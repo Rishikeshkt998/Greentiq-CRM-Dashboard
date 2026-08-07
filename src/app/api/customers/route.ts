@@ -12,18 +12,20 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
 
+    const getParamValues = (singularKey: string, pluralKey: string): string[] => {
+      const values = [
+        ...searchParams.getAll(`${pluralKey}[]`),
+        ...searchParams.getAll(pluralKey),
+        ...searchParams.getAll(`${singularKey}[]`),
+        ...searchParams.getAll(singularKey),
+      ].filter(Boolean);
+      return Array.from(new Set(values));
+    };
+
     const rawParams = {
       search: searchParams.get('search') || '',
-      statuses: searchParams.getAll('statuses[]').length
-        ? searchParams.getAll('statuses[]')
-        : searchParams.get('status')
-        ? [searchParams.get('status')]
-        : [],
-      companies: searchParams.getAll('companies[]').length
-        ? searchParams.getAll('companies[]')
-        : searchParams.get('company')
-        ? [searchParams.get('company')]
-        : [],
+      statuses: getParamValues('status', 'statuses'),
+      companies: getParamValues('company', 'companies'),
       dateFrom: searchParams.get('dateFrom') || undefined,
       dateTo: searchParams.get('dateTo') || undefined,
       phone: searchParams.get('phone') || '',
@@ -54,7 +56,7 @@ export async function GET(request: NextRequest) {
     let filtered = allCustomers.filter((item) => {
       // Search match (name, email, or company)
       if (query.search) {
-        const q = query.search.toLowerCase();
+        const q = query.search.toLowerCase().trim();
         const matchesName = item.name.toLowerCase().includes(q);
         const matchesEmail = item.email.toLowerCase().includes(q);
         const matchesCompany = item.company.toLowerCase().includes(q);
@@ -117,6 +119,9 @@ export async function GET(request: NextRequest) {
     const startIndex = (currentPage - 1) * query.pageSize;
     const paginatedItems = filtered.slice(startIndex, startIndex + query.pageSize);
 
+    const activeLeads = filtered.filter((c) => c.status === 'Lead' || c.status === 'Prospect').length;
+    const contactedThisWeek = filtered.filter((c) => c.status === 'Active' || Boolean(c.lastContactDate)).length;
+
     return NextResponse.json({
       data: paginatedItems,
       meta: {
@@ -126,6 +131,8 @@ export async function GET(request: NextRequest) {
         totalPages,
         hasNextPage: currentPage < totalPages,
         hasPrevPage: currentPage > 1,
+        activeLeads,
+        contactedThisWeek,
       },
       availableCompanies,
     });
@@ -144,6 +151,13 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true, data: created }, { status: 201 });
   } catch (error: any) {
+    // Duplicate email/phone error — return 409 Conflict
+    if (error?.message?.startsWith('DUPLICATE:')) {
+      return NextResponse.json(
+        { error: error.message.replace('DUPLICATE:', '') },
+        { status: 409 }
+      );
+    }
     return NextResponse.json(
       { error: error?.errors ? error.errors[0]?.message : 'Validation failed' },
       { status: 400 }

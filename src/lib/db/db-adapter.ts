@@ -29,12 +29,28 @@ export async function getCustomersStore(): Promise<Customer[]> {
 }
 
 export async function createCustomerStore(input: CreateCustomerInput): Promise<Customer> {
+  // Check for duplicate email or phone in memory store
+  const allExisting = await getCustomersStore();
+  const emailLower = input.email.toLowerCase().trim();
+  const phoneClean = input.phone.replace(/\D/g, '');
+
+  const duplicate = allExisting.find((c) => {
+    const sameEmail = c.email.toLowerCase().trim() === emailLower;
+    const samePhone = c.phone.replace(/\D/g, '') === phoneClean && phoneClean.length > 0;
+    return sameEmail || samePhone;
+  });
+
+  if (duplicate) {
+    const reason = duplicate.email.toLowerCase().trim() === emailLower ? 'email' : 'phone number';
+    throw new Error(`DUPLICATE:A customer with this ${reason} already exists (${duplicate.name}).`);
+  }
+
   const newCustomer: Customer = {
     id: `cust-${Date.now()}`,
     ...input,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
-    avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(input.name)}`,
+    avatarUrl: undefined,
   };
 
   if (process.env.MONGODB_URI) {

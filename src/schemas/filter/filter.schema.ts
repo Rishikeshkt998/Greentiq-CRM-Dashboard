@@ -11,7 +11,7 @@ export const filterQuerySchema = z.object({
   sortBy: z.string().optional().default('name'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
   page: z.coerce.number().min(1).optional().default(1),
-  pageSize: z.coerce.number().min(1).max(100).optional().default(8),
+  pageSize: z.coerce.number().min(1).max(500).optional().default(8),
 });
 
 export const saveFilterPresetSchema = z.object({

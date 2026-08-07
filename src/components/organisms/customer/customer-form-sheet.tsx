@@ -8,6 +8,7 @@ import { Customer } from '@/types/customer/entity';
 import { customerSchema, CustomerFormValues } from '@/schemas/customer/customer.schema';
 import { useCreateCustomer, useUpdateCustomer } from '@/hooks/customer/use-customers';
 import { cn } from '@/lib/utils/cn';
+import { toast } from 'sonner';
 import {
   Form,
   FormField,
@@ -16,6 +17,9 @@ import {
   FormControl,
   FormMessage,
 } from '@/components/ui/form';
+
+import { COUNTRY_CODES } from '@/config';
+import { CountryCodePicker } from './country-code-picker';
 
 interface CustomerFormSheetProps {
   open: boolean;
@@ -37,6 +41,7 @@ export function CustomerFormSheet({ open, onClose, customer }: CustomerFormSheet
     defaultValues: {
       name: customer?.name ?? '',
       email: customer?.email ?? '',
+      countryCode: '+91',
       phone: customer?.phone ?? '',
       company: customer?.company ?? '',
       status: customer?.status ?? 'Active',
@@ -49,12 +54,15 @@ export function CustomerFormSheet({ open, onClose, customer }: CustomerFormSheet
   const { watch, reset, formState: { errors } } = form;
   const watchName = watch('name');
   const watchEmail = watch('email');
+  const watchCountryCode = watch('countryCode') || '+91';
+  const currentConfig = COUNTRY_CODES.find((c) => c.code === watchCountryCode) || COUNTRY_CODES.find((c) => c.code === '+91') || COUNTRY_CODES[0];
 
   useEffect(() => {
     if (open) {
       reset({
         name: customer?.name ?? '',
         email: customer?.email ?? '',
+        countryCode: '+91',
         phone: customer?.phone ?? '',
         company: customer?.company ?? '',
         status: customer?.status ?? 'Active',
@@ -67,9 +75,18 @@ export function CustomerFormSheet({ open, onClose, customer }: CustomerFormSheet
 
   const onSubmit = (values: CustomerFormValues) => {
     if (isEdit && customer) {
-      updateCustomer({ id: customer.id, ...values }, { onSuccess: () => { onClose(); } });
+      updateCustomer(
+        { id: customer.id, ...values },
+        {
+          onSuccess: () => { onClose(); },
+          onError: (error: Error) => { toast.error(error.message || 'Failed to update customer'); },
+        }
+      );
     } else {
-      createCustomer(values, { onSuccess: () => { onClose(); } });
+      createCustomer(values, {
+        onSuccess: () => { onClose(); },
+        onError: (error: Error) => { toast.error(error.message || 'Failed to add customer'); },
+      });
     }
   };
 
@@ -172,22 +189,34 @@ export function CustomerFormSheet({ open, onClose, customer }: CustomerFormSheet
                 )}
               />
 
-              {/* Phone */}
+              {/* Phone with Searchable Country Code Selector */}
               <FormField
                 control={form.control}
                 name="phone"
                 render={({ field }) => (
                   <FormItem className="space-y-0.5">
                     <FormLabel className="text-[11px] font-semibold text-foreground/90">
-                      Phone <span className="text-muted-foreground">*</span>
+                      Phone Number <span className="text-[10px] font-normal text-muted-foreground">({currentConfig.name} {currentConfig.code})</span>
                     </FormLabel>
-                    <FormControl>
-                      <input
-                        {...field}
-                        placeholder="+1 (555) 123-4567"
-                        className={cn(inputBase, errors.phone ? 'border-red-500/80' : 'border-border/80')}
+                    <div className="flex gap-1.5">
+                      <FormField
+                        control={form.control}
+                        name="countryCode"
+                        render={({ field: countryField }) => (
+                          <CountryCodePicker
+                            value={countryField.value || '+91'}
+                            onChange={countryField.onChange}
+                          />
+                        )}
                       />
-                    </FormControl>
+                      <FormControl>
+                        <input
+                          {...field}
+                          placeholder={currentConfig.placeholder}
+                          className={cn(inputBase, 'flex-1', errors.phone ? 'border-red-500/80' : 'border-border/80')}
+                        />
+                      </FormControl>
+                    </div>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -246,9 +275,8 @@ export function CustomerFormSheet({ open, onClose, customer }: CustomerFormSheet
                         <FormControl>
                           <input
                             {...field}
-                            type="text"
-                            placeholder="15/10/2023"
-                            className={cn(inputBase, 'border-border/80 pr-8')}
+                            type="date"
+                            className={cn(inputBase, 'border-border/80 cursor-pointer')}
                           />
                         </FormControl>
                         <Calendar className="absolute right-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
