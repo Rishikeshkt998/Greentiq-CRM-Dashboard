@@ -50,13 +50,12 @@ export function AppLogo({ className }: AppLogoProps) {
       {/* CRM Bold Text */}
       <text
         x="256"
-        y="438"
+        y="435"
         textAnchor="middle"
         fontFamily="system-ui, -apple-system, Arial, sans-serif"
-        fontSize="82"
+        fontSize="80"
         fontWeight="900"
         fill="#eafff5"
-        letterSpacing="8"
       >
         CRM
       </text>

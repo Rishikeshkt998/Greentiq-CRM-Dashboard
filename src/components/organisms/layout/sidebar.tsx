@@ -26,7 +26,7 @@ export function Sidebar({
     <aside
       className={cn(
         'flex flex-col h-full rounded-xl border border-gray-200/80 dark:border-border bg-card shadow-xs transition-all duration-300 flex-shrink-0',
-        isCollapsed ? 'w-16 p-2.5' : 'w-56 p-4'
+        isCollapsed ? 'w-16 p-2.5' : 'w-64 p-4'
       )}
     >
       {/* Brand Header */}
