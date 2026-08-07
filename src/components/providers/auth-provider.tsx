@@ -22,6 +22,21 @@ export function AuthProvider({ children, isAuthEnabled }: AuthProviderProps) {
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
   const refreshTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Restore session from localStorage on client mount to prevent SSR hydration mismatch
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const savedUser = localStorage.getItem('gt_user_session');
+      if (savedUser) {
+        try {
+          const parsed = JSON.parse(savedUser);
+          if (parsed && parsed.email) {
+            setAuthState({ user: parsed, isAuthenticated: true, isLoading: false });
+          }
+        } catch (e) {}
+      }
+    }
+  }, []);
+
   const updateAccessToken = (token: string | null) => {
     setAccessTokenState(token);
     saveTokenToStore(token);
@@ -36,19 +51,26 @@ export function AuthProvider({ children, isAuthEnabled }: AuthProviderProps) {
         updateAccessToken(data.accessToken);
         const payload = verifyAccessToken(data.accessToken);
         if (payload) {
+          const userObj = {
+            id: payload.userId,
+            name: payload.name,
+            email: payload.email,
+            role: payload.role,
+          };
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('gt_user_session', JSON.stringify(userObj));
+          }
           setAuthState({
-            user: {
-              id: payload.userId,
-              name: payload.name,
-              email: payload.email,
-              role: payload.role,
-            },
+            user: userObj,
             isAuthenticated: true,
             isLoading: false,
           });
         }
         scheduleTokenRefresh();
       } catch {
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('gt_user_session');
+        }
         setAuthState({ user: null, isAuthenticated: false, isLoading: false });
         updateAccessToken(null);
         toast.error('Your session has expired. Please log in again.');
@@ -61,6 +83,9 @@ export function AuthProvider({ children, isAuthEnabled }: AuthProviderProps) {
       setAuthState((prev) => ({ ...prev, isLoading: true }));
       try {
         const { user, accessToken: token } = await loginUser({ email, password });
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('gt_user_session', JSON.stringify(user));
+        }
         setAuthState({ user, isAuthenticated: true, isLoading: false });
         updateAccessToken(token);
         scheduleTokenRefresh();
@@ -78,6 +103,9 @@ export function AuthProvider({ children, isAuthEnabled }: AuthProviderProps) {
       await logoutUser();
     } finally {
       if (refreshTimerRef.current) clearTimeout(refreshTimerRef.current);
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('gt_user_session');
+      }
       setAuthState({ user: null, isAuthenticated: false, isLoading: false });
       updateAccessToken(null);
       toast.info('You have been logged out.');
@@ -91,16 +119,25 @@ export function AuthProvider({ children, isAuthEnabled }: AuthProviderProps) {
         .then((data) => {
           updateAccessToken(data.accessToken);
           const payload = verifyAccessToken(data.accessToken);
-          setAuthState({
-            user: payload
-              ? { id: payload.userId, name: payload.name, email: payload.email, role: payload.role }
-              : MOCK_ADMIN_USER,
-            isAuthenticated: true,
-            isLoading: false,
-          });
-          scheduleTokenRefresh();
+          if (payload) {
+            const userObj = { id: payload.userId, name: payload.name, email: payload.email, role: payload.role };
+            if (typeof window !== 'undefined') {
+              localStorage.setItem('gt_user_session', JSON.stringify(userObj));
+            }
+            setAuthState({
+              user: userObj,
+              isAuthenticated: true,
+              isLoading: false,
+            });
+            scheduleTokenRefresh();
+          } else {
+            if (typeof window !== 'undefined') localStorage.removeItem('gt_user_session');
+            setAuthState({ user: null, isAuthenticated: false, isLoading: false });
+            updateAccessToken(null);
+          }
         })
         .catch(() => {
+          if (typeof window !== 'undefined') localStorage.removeItem('gt_user_session');
           setAuthState({ user: null, isAuthenticated: false, isLoading: false });
           updateAccessToken(null);
         });

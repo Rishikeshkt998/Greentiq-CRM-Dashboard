@@ -6,13 +6,19 @@ import { SavedFilterPreset } from '@/types/filter/preset';
 let memoryCustomers: Customer[] = [...initialMockCustomers];
 let memorySavedFilters: SavedFilterPreset[] = [...initialSavedFilters];
 
+function isMongoEnabled(): boolean {
+  const provider = process.env.DB_PROVIDER?.toLowerCase().trim();
+  if (provider === 'memory') return false;
+  return Boolean(process.env.MONGODB_URI);
+}
+
 export async function getCustomersStore(): Promise<Customer[]> {
   // Always reset to initial fresh unique list if needed
   if (!memoryCustomers || memoryCustomers.length === 0) {
     memoryCustomers = [...initialMockCustomers];
   }
 
-  if (process.env.MONGODB_URI) {
+  if (isMongoEnabled()) {
     try {
       const client = await getMongoClient();
       const db = client.db('crm_db');
@@ -53,7 +59,7 @@ export async function createCustomerStore(input: CreateCustomerInput): Promise<C
     avatarUrl: undefined,
   };
 
-  if (process.env.MONGODB_URI) {
+  if (isMongoEnabled()) {
     try {
       const client = await getMongoClient();
       const db = client.db('crm_db');
@@ -78,7 +84,7 @@ export async function updateCustomerStore(input: UpdateCustomerInput): Promise<C
     updatedAt: new Date().toISOString(),
   };
 
-  if (process.env.MONGODB_URI) {
+  if (isMongoEnabled()) {
     try {
       const client = await getMongoClient();
       const db = client.db('crm_db');
@@ -99,7 +105,7 @@ export async function updateCustomerStore(input: UpdateCustomerInput): Promise<C
 }
 
 export async function deleteCustomerStore(id: string): Promise<boolean> {
-  if (process.env.MONGODB_URI) {
+  if (isMongoEnabled()) {
     try {
       const client = await getMongoClient();
       const db = client.db('crm_db');

@@ -4,7 +4,7 @@ const envSchema = z.object({
   // Public Client Variables
   NEXT_PUBLIC_APP_NAME: z.string().default('Greentiq Innovations CRM'),
   NEXT_PUBLIC_APP_URL: z.string().default('http://localhost:3000'),
-  NEXT_PUBLIC_DEFAULT_PAGE_SIZE: z.coerce.number().default(8),
+  NEXT_PUBLIC_DEFAULT_PAGE_SIZE: z.coerce.number().default(10),
 
   // Feature Flags
   ENABLE_AUTH: z.preprocess((val) => val === 'true' || val === true, z.boolean()).default(false),
@@ -19,6 +19,7 @@ const envSchema = z.object({
   ENABLE_CSP_NONCE: z.preprocess((val) => val === 'true' || val === true, z.boolean()).default(false),
 
   // Database Connection (Optional)
+  DB_PROVIDER: z.enum(['memory', 'mongodb']).default('memory'),
   MONGODB_URI: z.string().optional(),
 });
 
@@ -38,6 +39,7 @@ const parseEnv = () => {
     RATE_LIMIT_MAX_REQUESTS: process.env.RATE_LIMIT_MAX_REQUESTS,
     MOCK_API_SIMULATED_LATENCY_MS: process.env.MOCK_API_SIMULATED_LATENCY_MS,
 
+    DB_PROVIDER: process.env.DB_PROVIDER,
     MONGODB_URI: process.env.MONGODB_URI,
   });
 

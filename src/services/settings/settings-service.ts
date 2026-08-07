@@ -1,4 +1,5 @@
-import { DEFAULT_SETTINGS, STORAGE_KEY, SystemSettings } from './settings-constants';
+import { DEFAULT_SETTINGS, STORAGE_KEY, type SystemSettings } from './settings-constants';
+export type { SystemSettings } from './settings-constants';
 
 export function getStoredSettings(): SystemSettings {
   if (typeof window === 'undefined') return DEFAULT_SETTINGS;

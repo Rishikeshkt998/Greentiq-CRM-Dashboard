@@ -55,7 +55,7 @@ export function CustomerDetailModal({ customer, open, onClose, onEdit }: Custome
 
   const handleDelete = () => {
     if (confirm(`Delete ${customer.name}?`)) {
-      deleteCustomer(customer.id);
+      deleteCustomer({ id: customer.id });
       onClose();
     }
   };

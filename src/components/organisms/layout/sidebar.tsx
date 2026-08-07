@@ -19,38 +19,56 @@ export function Sidebar({
   mobileOpen = false,
   setMobileOpen,
 }: SidebarProps) {
+  const isMobileDrawer = mobileOpen;
+  const isCollapsed = collapsed && !isMobileDrawer;
+
   const content = (
     <aside
       className={cn(
-        'flex flex-col h-full rounded-xl border border-gray-200/80 dark:border-border bg-card shadow-xs p-4 transition-all duration-300 flex-shrink-0',
-        collapsed ? 'w-16' : 'w-56'
+        'flex flex-col h-full rounded-xl border border-gray-200/80 dark:border-border bg-card shadow-xs transition-all duration-300 flex-shrink-0',
+        isCollapsed ? 'w-16 p-2.5' : 'w-56 p-4'
       )}
     >
       {/* Brand Header */}
-      <div className="flex items-center justify-between pb-4 pt-1 px-1 border-b border-border/40">
-        {!collapsed ? (
-          <div className="flex items-center gap-2.5">
-            <AppLogo className="h-8 w-8" />
-            <span className="text-base font-extrabold tracking-tight text-foreground">
+      {!isCollapsed ? (
+        <div className="flex items-center justify-between pb-4 pt-1 px-1 border-b border-border/40">
+          <div className="flex items-center gap-2.5 overflow-hidden">
+            <AppLogo className="h-8 w-8 flex-shrink-0" />
+            <span className="text-base font-extrabold tracking-tight text-foreground whitespace-nowrap">
               GreenTiq CRM
             </span>
           </div>
-        ) : (
-          <AppLogo className="h-8 w-8 mx-auto" />
-        )}
-        <button
-          onClick={() => {
-            if (setMobileOpen) setMobileOpen(false);
-            setCollapsed(!collapsed);
-          }}
-          className="rounded-full p-1 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-        >
-          {collapsed ? <ChevronRight className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
-        </button>
-      </div>
+          {setMobileOpen && (
+            <button
+              onClick={() => setMobileOpen(false)}
+              className="md:hidden rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              title="Close menu"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          )}
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="hidden md:flex rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            title="Collapse sidebar"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </button>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-2 pb-3 pt-1 border-b border-border/40">
+          <AppLogo className="h-8 w-8 flex-shrink-0" />
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="rounded-full p-1.5 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            title="Expand sidebar"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
 
-      <nav className={cn('flex-1 space-y-0.5 pt-3', collapsed ? 'px-0' : 'px-1')}>
+      <nav className={cn('flex-1 space-y-0.5 pt-3', isCollapsed ? 'px-0' : 'px-1')}>
         {NAV_ITEMS.map((item) => {
           const isActive = activeTab === item.label;
           return (
@@ -62,7 +80,7 @@ export function Sidebar({
                 }}
                 className={cn(
                   'relative flex w-full items-center transition-all cursor-pointer select-none',
-                  collapsed
+                  isCollapsed
                     ? cn(
                         'justify-center rounded-xl p-2.5 mx-auto',
                         isActive
@@ -76,14 +94,14 @@ export function Sidebar({
                           : 'text-slate-500 hover:bg-slate-100/80 dark:text-slate-400 dark:hover:bg-slate-800/40'
                       )
                 )}
-                title={collapsed ? item.label : undefined}
+                title={isCollapsed ? item.label : undefined}
               >
                 {/* Blue bar — only show in expanded mode */}
-                {isActive && !collapsed && (
+                {isActive && !isCollapsed && (
                   <span className="absolute left-0 top-0 bottom-0 w-[5px] bg-[#2563eb] dark:bg-blue-400 rounded-l-xl" />
                 )}
-                <item.icon className={cn('flex-shrink-0', collapsed ? 'h-5 w-5' : 'h-[18px] w-[18px]', isActive ? 'text-[#2563eb] dark:text-blue-400' : 'text-slate-400 dark:text-slate-500')} />
-                {!collapsed && <span>{item.label}</span>}
+                <item.icon className={cn('flex-shrink-0', isCollapsed ? 'h-5 w-5' : 'h-[18px] w-[18px]', isActive ? 'text-[#2563eb] dark:text-blue-400' : 'text-slate-400 dark:text-slate-500')} />
+                {!isCollapsed && <span>{item.label}</span>}
               </button>
             </div>
           );
@@ -96,11 +114,11 @@ export function Sidebar({
           onClick={onLogout}
           className={cn(
             'flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-xs font-semibold text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 transition-colors',
-            collapsed && 'justify-center px-0'
+            isCollapsed && 'justify-center px-0'
           )}
         >
           <LogOut className="h-4 w-4 flex-shrink-0" />
-          {!collapsed && <span>Log Out</span>}
+          {!isCollapsed && <span>Log Out</span>}
         </button>
       </div>
     </aside>

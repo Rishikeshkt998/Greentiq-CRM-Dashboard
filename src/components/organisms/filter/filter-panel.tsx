@@ -100,7 +100,7 @@ export function FilterPanel({ open, onClose, filters, onApply, availableCompanie
   return (
     <>
       <div className="fixed inset-0 z-40 bg-black/60 backdrop-blur-xs" onClick={onClose} />
-      <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[310px] flex-col border-l border-border/80 bg-card shadow-2xl transition-colors duration-200">
+      <div className="fixed inset-y-0 right-0 z-50 flex w-full max-w-[310px] flex-col border-l border-border/80 bg-card shadow-2xl transition-colors duration-200" style={{ fontFamily: 'var(--font-sora), var(--font-jakarta), var(--font-inter), sans-serif' }}>
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border/60 px-4 py-2.5 flex-shrink-0">
           <h2 className="text-sm font-bold text-foreground">Filters</h2>
@@ -288,7 +288,11 @@ export function FilterPanel({ open, onClose, filters, onApply, availableCompanie
               onApply(localFilters);
               onClose();
             }}
-            className="w-full rounded-lg bg-[#60a5fa] hover:bg-[#3b82f6] py-2 text-xs font-extrabold text-slate-950 transition-colors shadow-xs text-center cursor-pointer"
+            className="w-full rounded-xl py-2.5 text-[13px] font-bold text-white transition-all duration-200 shadow-md hover:shadow-lg hover:scale-[1.01] active:scale-[0.99] cursor-pointer tracking-wide"
+            style={{
+              background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 50%, #15803d 100%)',
+              boxShadow: '0 4px 15px rgba(34, 197, 94, 0.35)',
+            }}
           >
             Apply Filters
           </button>

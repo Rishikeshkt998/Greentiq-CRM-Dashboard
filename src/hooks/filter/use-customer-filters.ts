@@ -15,7 +15,7 @@ const DEFAULT_FILTERS: CustomerFilterState = {
   sortBy: 'name',
   sortOrder: 'asc',
   page: 1,
-  pageSize: 8,
+  pageSize: 10,
 };
 
 export function useCustomerFilters() {
@@ -27,7 +27,7 @@ export function useCustomerFilters() {
     const search = searchParams.get('search') || '';
     const status = searchParams.getAll('status') as CustomerStatus[];
     const page = Number(searchParams.get('page')) || 1;
-    const pageSize = Number(searchParams.get('pageSize')) || 8;
+    const pageSize = Number(searchParams.get('pageSize')) || 10;
     const sortBy = searchParams.get('sortBy') || 'name';
     const sortOrder = (searchParams.get('sortOrder') as 'asc' | 'desc') || 'asc';
 
@@ -48,7 +48,7 @@ export function useCustomerFilters() {
       const params = new URLSearchParams();
       if (newFilters.search) params.set('search', newFilters.search);
       if (newFilters.page > 1) params.set('page', String(newFilters.page));
-      if (newFilters.pageSize !== 8) params.set('pageSize', String(newFilters.pageSize));
+      if (newFilters.pageSize !== 10) params.set('pageSize', String(newFilters.pageSize));
       if (newFilters.sortBy !== 'name') params.set('sortBy', newFilters.sortBy);
       if (newFilters.sortOrder !== 'asc') params.set('sortOrder', newFilters.sortOrder);
       newFilters.statuses.forEach((s) => params.append('status', s));

@@ -41,8 +41,8 @@ export function useCreateCustomer() {
 export function useUpdateCustomer() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (data: UpdateCustomerInput) => updateCustomer(data),
-    onMutate: async (updatedCustomer) => {
+    mutationFn: ({ silent: _silent, ...data }: UpdateCustomerInput & { silent?: boolean }) => updateCustomer(data),
+    onMutate: async ({ silent: _silent, ...updatedCustomer }) => {
       await queryClient.cancelQueries({ queryKey: customerKeys.lists() });
       const previousData = queryClient.getQueriesData({ queryKey: customerKeys.lists() });
 
@@ -70,8 +70,10 @@ export function useUpdateCustomer() {
       }
       toast.error(error.message || 'Failed to update customer');
     },
-    onSuccess: (updatedCustomer) => {
-      toast.success(`${updatedCustomer.name} has been updated!`);
+    onSuccess: (updatedCustomer, variables) => {
+      if (!variables.silent) {
+        toast.success(`${updatedCustomer.name} has been updated!`);
+      }
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: customerKeys.all });
@@ -82,8 +84,8 @@ export function useUpdateCustomer() {
 export function useDeleteCustomer() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) => deleteCustomer(id),
-    onMutate: async (deletedId) => {
+    mutationFn: ({ id }: { id: string; silent?: boolean }) => deleteCustomer(id),
+    onMutate: async ({ id: deletedId }) => {
       await queryClient.cancelQueries({ queryKey: customerKeys.lists() });
       const previousData = queryClient.getQueriesData({ queryKey: customerKeys.lists() });
 
@@ -105,8 +107,10 @@ export function useDeleteCustomer() {
       }
       toast.error(error.message || 'Failed to delete customer');
     },
-    onSuccess: () => {
-      toast.success('Customer deleted successfully!');
+    onSuccess: (_, variables) => {
+      if (!variables.silent) {
+        toast.success('Customer deleted successfully!');
+      }
       queryClient.invalidateQueries({ queryKey: customerKeys.all });
     },
   });

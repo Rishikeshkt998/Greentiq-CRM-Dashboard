@@ -30,7 +30,7 @@ import { TasksView } from '@/components/organisms/tasks/tasks-view';
 import { SettingsView } from '@/components/organisms/settings/settings-view';
 
 export function DashboardContent() {
-  const [activeTab, setActiveTab] = useState<DashboardTab>('Customers');
+  const [activeTab, setActiveTab] = useState<DashboardTab>('Dashboard');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { filters, updateFilters, resetFilters, activeFilterCount } = useCustomerFilters();
   const [searchInput, setSearchInput] = useState(filters.search ?? '');
@@ -60,6 +60,10 @@ export function DashboardContent() {
 
   const activeFilters = useMemo(() => ({ ...filters, search: debouncedSearch }), [filters, debouncedSearch]);
   const { data, isLoading } = useCustomers(activeFilters, !isAuthEnabled || isAuthenticated);
+
+  // Separate unfiltered query for Dashboard global metrics — never affected by Customer tab filters
+  const { data: globalData, isLoading: isGlobalLoading } = useCustomers({}, !isAuthEnabled || isAuthenticated);
+  const globalMeta = globalData?.meta;
 
   const { mutate: deleteCustomer } = useDeleteCustomer();
   const { mutate: updateCustomer } = useUpdateCustomer();
@@ -131,11 +135,11 @@ export function DashboardContent() {
   const handleConfirmDelete = useCallback(() => {
     if (deleteTarget?.type === 'bulk') {
       const count = selectedIds.size;
-      selectedIds.forEach((id) => deleteCustomer(id));
+      selectedIds.forEach((id) => deleteCustomer({ id, silent: true }));
       setSelectedIds(new Set());
       toast.success(`Deleted ${count} customer(s) successfully`);
     } else if (deleteTarget?.type === 'single' && deleteTarget.id) {
-      deleteCustomer(deleteTarget.id);
+      deleteCustomer({ id: deleteTarget.id });
     }
   }, [deleteTarget, selectedIds, deleteCustomer]);
 
@@ -143,7 +147,7 @@ export function DashboardContent() {
     if (!newStatus) return;
     selectedIds.forEach((id) => {
       const customer = orderedCustomers.find((c) => c.id === id);
-      if (customer) updateCustomer({ ...customer, status: newStatus as CustomerStatus });
+      if (customer) updateCustomer({ ...customer, status: newStatus as CustomerStatus, silent: true });
     });
     toast.success(`Updated ${selectedIds.size} customers to "${newStatus}"`);
     setSelectedIds(new Set());
@@ -193,10 +197,10 @@ export function DashboardContent() {
         <main className="flex-1 flex flex-col min-h-0 overflow-hidden">
           {activeTab === 'Dashboard' && (
             <MetricsOverview
-              totalCount={meta?.total}
-              activeLeads={meta?.activeLeads}
-              contactedThisWeek={meta?.contactedThisWeek}
-              isLoading={isLoading}
+              totalCount={globalMeta?.total}
+              activeLeads={globalMeta?.activeLeads}
+              contactedThisWeek={globalMeta?.contactedThisWeek}
+              isLoading={isGlobalLoading}
             />
           )}
 

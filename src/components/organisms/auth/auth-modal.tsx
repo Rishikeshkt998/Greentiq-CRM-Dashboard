@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Leaf, Lock, Mail, Loader2, Eye, EyeOff, ShieldCheck } from 'lucide-react';
+import { Lock, Mail, Loader2, Eye, EyeOff, ShieldCheck } from 'lucide-react';
 import { loginSchema, LoginSchemaInput } from '@/schemas/auth/login.schema';
 import { useAuth } from '@/hooks/auth/use-auth';
+import { AppLogo } from '@/components/atoms/app-logo';
 import { cn } from '@/lib/utils/cn';
 
 interface AuthModalProps {
@@ -45,9 +46,7 @@ export function AuthModal({ onSuccess }: AuthModalProps) {
 
         {/* ── 1. Top Logo & Header Section ── */}
         <div className="flex flex-col items-center gap-3 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-600 to-indigo-600 shadow-lg shadow-violet-500/30">
-            <Leaf className="h-7 w-7 text-white" />
-          </div>
+          <AppLogo className="h-14 w-14 rounded-2xl shadow-lg shadow-emerald-500/20" />
           <div>
             <h1 className="text-2xl font-black text-foreground tracking-tight">Welcome to Greentiq</h1>
             <p className="text-xs text-muted-foreground mt-0.5 font-normal">Sign in to your CRM dashboard</p>

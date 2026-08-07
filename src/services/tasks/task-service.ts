@@ -1,4 +1,5 @@
-import { DEFAULT_TASKS, STORAGE_KEY, TaskItem } from './task-constants';
+import { DEFAULT_TASKS, STORAGE_KEY, type TaskItem } from './task-constants';
+export type { TaskItem } from './task-constants';
 
 export function getStoredTasks(): TaskItem[] {
   if (typeof window === 'undefined') return DEFAULT_TASKS;
