@@ -30,6 +30,7 @@ const parseEnv = () => {
 
     ENABLE_AUTH: process.env.ENABLE_AUTH,
     ENABLE_MOCK_DELAY: process.env.ENABLE_MOCK_DELAY,
+    ENABLE_CSP_NONCE: process.env.ENABLE_CSP_NONCE,
 
     JWT_ACCESS_SECRET: process.env.JWT_ACCESS_SECRET,
     JWT_REFRESH_SECRET: process.env.JWT_REFRESH_SECRET,
